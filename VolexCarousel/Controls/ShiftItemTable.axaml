@@ -1,0 +1,176 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:VolexCarousel.Models"
+        xmlns:converters="using:VolexCarousel.Converters"
+        xmlns:controls="using:VolexCarousel.Controls">
+
+  <!--
+    Additional resources 
+    Using Control Themes:
+         https://docs.avaloniaui.net/docs/basics/user-interface/styling/control-themes
+    Using Theme Variants:
+         https://docs.avaloniaui.net/docs/guides/styles-and-resources/how-to-use-theme-variants
+  -->
+  
+  <Design.PreviewWith>
+    <StackPanel Width="400" Spacing="10">      
+        <StackPanel Background="{DynamicResource SystemRegionBrush}">
+          <controls:ShiftItemTable />
+        </StackPanel>
+    </StackPanel>
+  </Design.PreviewWith>
+ 
+  <ControlTheme x:Key="{x:Type controls:ShiftItemTable}" TargetType="controls:ShiftItemTable">
+    <ControlTheme.Resources>
+      <converters:PCStoColorIndicatorConverter x:Key="PCStoColorIndicatorConverter" />
+  </ControlTheme.Resources>
+  <Styles>
+          <Style Selector="Border.StatCard">
+
+        <Setter Property="Background"
+                Value="#17367F"/>
+
+        <Setter Property="CornerRadius"
+                Value="18"/>
+
+        <Setter Property="Padding"
+                Value="24"/>
+
+        <Setter Property="MinHeight"
+                Value="160"/>
+
+    </Style>
+
+    <Style Selector="Border.PanelCard">
+
+        <Setter Property="Background"
+                Value="#132868"/>
+
+        <Setter Property="CornerRadius"
+                Value="18"/>
+
+        <Setter Property="Padding"
+                Value="16"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.CardTitle">
+
+        <Setter Property="Foreground"
+                Value="#7EEFFF"/>
+
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+
+        <Setter Property="FontSize"
+                Value="20"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.BigValue">
+
+        <Setter Property="Foreground"
+                Value="#B7FFFF"/>
+
+        <Setter Property="FontWeight"
+                Value="Bold"/>
+
+        <Setter Property="FontSize"
+                Value="64"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.ValueUnit">
+
+        <Setter Property="Foreground"
+                Value="#7EEFFF"/>
+
+        <Setter Property="FontSize"
+                Value="20"/>
+
+    </Style>
+        
+        <Style Selector="DataGridColumnHeader">
+
+            <Setter Property="Background"
+                    Value="#EEF5FF"/>
+
+            <Setter Property="Foreground"
+                    Value="#1E3A8A"/>
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+        </Style>
+        <Style Selector="DataGrid">
+            <Setter Property="IsReadOnly" Value="True"/>
+        </Style>
+    <Style Selector="TextBlock.PanelHeader">
+
+        <Setter Property="Foreground"
+                Value="White"/>
+
+        <Setter Property="FontWeight"
+                Value="Bold"/>
+
+        <Setter Property="FontSize"
+                Value="24"/>
+
+        <Setter Property="HorizontalAlignment"
+                Value="Center"/>
+
+        <Setter Property="Margin"
+                Value="0,0,0,12"/>
+
+    </Style>
+  </Styles>
+    <Setter Property="Template">
+      <ControlTemplate>
+                  <Border Classes="PanelCard" >
+                <Grid RowDefinitions="10*,90*">
+
+                    <TextBlock Text="{TemplateBinding Title}"
+                               Classes="PanelHeader"
+                               Grid.Row="0"/>
+
+                    <DataGrid   Grid.Row="1"
+                    ColumnWidth="*"
+                    ItemsSource="{TemplateBinding ShiftItems}"
+                              AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Hours">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                </DataTemplate>
+                             </DataGridTemplateColumn.HeaderTemplate>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:ShiftRecordRowModel">
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding Timestamp, StringFormat='HH:mm:ss'}"/>                                
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Outputs">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                </DataTemplate>
+                             </DataGridTemplateColumn.HeaderTemplate>
+                             <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:ShiftRecordRowModel">
+                                <Grid ColumnDefinitions="50*,50*">                                    
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding Output}" Foreground="{Binding Output, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
+                                </Grid>
+                                </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                </Grid>
+            </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+</ResourceDictionary>

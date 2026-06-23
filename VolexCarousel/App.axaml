@@ -1,0 +1,26 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="VolexCarousel.App"
+             xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
+             xmlns:local="using:VolexCarousel"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://VolexCarousel/Controls/ShiftItemTable.axaml"/>
+                <ResourceInclude Source="avares://VolexCarousel/Controls/ShiftTable.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+  
+    <Application.Styles>
+        <FluentTheme />
+        
+        <dialogHostAvalonia:DialogHostStyles />
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+    </Application.Styles>
+</Application>

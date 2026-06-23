@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             Padding="10"
+             Width="800"
+             Height="450"
+             xmlns:vm="using:VolexCarousel.ViewModels"
+             x:DataType="vm:LoginViewModel"
+             Background="#132868"
+             x:Class="VolexCarousel.Views.LoginView">
+
+    <Border BorderBrush="White"
+    CornerRadius="5"
+    Padding="15,0,15,0"
+            BorderThickness="2">
+            <StackPanel
+            Orientation="Vertical"
+            Spacing="15">
+                <TextBlock 
+                Padding="0,30,0,0"
+                HorizontalAlignment="Center"
+                Foreground="White"
+                FontSize="48"
+                Text="Login Panel"/>
+                <StackPanel Orientation="Vertical" Spacing="20">
+                
+                <Grid ColumnDefinitions="Auto,3*,80*">
+                                <TextBlock 
+                Grid.Row="0"
+                Grid.Column="0"
+                Foreground="White"
+                Text="Username:"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                FontSize="32"
+                />
+                <TextBox
+                MaxLines="1"
+                Grid.Column="2"
+                Grid.Row="0"
+                />
+
+                </Grid>
+                <Grid  ColumnDefinitions="22*,3*,75*">
+                                <TextBlock 
+                Grid.Row="0"
+                Grid.Column="0"
+                Foreground="White"
+                Text="Password:"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                FontSize="32"
+                
+                />
+                <TextBox
+                Grid.Column="2"
+                Grid.Row="0"
+                MaxLines="1"
+                PasswordChar="*"
+                />
+
+                </Grid>
+                <Button Command="{Binding LoginCommand}" Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Foreground="White">Login</Button>
+                </StackPanel>
+            </StackPanel>
+    </Border>
+</UserControl>

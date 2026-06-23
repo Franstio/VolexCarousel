@@ -1,0 +1,226 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:metadata="using:Avalonia.Metadata"
+             xmlns:vm="using:VolexCarousel.ViewModels"
+             xmlns:volexcarousel="using:VolexCarousel"
+             xmlns:models="using:VolexCarousel.Models"
+             xmlns:controls="using:VolexCarousel.Controls"
+             mc:Ignorable="d" d:DesignWidth="1366" d:DesignHeight="1024"
+             x:DataType="vm:DashboardViewModel"
+             x:Class="VolexCarousel.Views.DashboardView">             
+             <UserControl.Styles>
+                 
+    <FluentTheme />
+
+    <Style Selector="Border.StatCard">
+
+        <Setter Property="Background"
+                Value="#17367F"/>
+
+        <Setter Property="CornerRadius"
+                Value="18"/>
+
+        <Setter Property="Padding"
+                Value="24"/>
+
+        <Setter Property="MinHeight"
+                Value="160"/>
+
+    </Style>
+
+    <Style Selector="Border.PanelCard">
+
+        <Setter Property="Background"
+                Value="#132868"/>
+
+        <Setter Property="CornerRadius"
+                Value="18"/>
+
+        <Setter Property="Padding"
+                Value="16"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.CardTitle">
+
+        <Setter Property="Foreground"
+                Value="#7EEFFF"/>
+
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+
+        <Setter Property="FontSize"
+                Value="20"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.BigValue">
+
+        <Setter Property="Foreground"
+                Value="#B7FFFF"/>
+
+        <Setter Property="FontWeight"
+                Value="Bold"/>
+
+        <Setter Property="FontSize"
+                Value="128"/>
+
+    </Style>
+
+    <Style Selector="TextBlock.ValueUnit">
+
+        <Setter Property="Foreground"
+                Value="#7EEFFF"/>
+
+        <Setter Property="FontSize"
+                Value="20"/>
+
+    </Style>
+        
+        <Style Selector="DataGridColumnHeader">
+
+            <Setter Property="Background"
+                    Value="#EEF5FF"/>
+
+            <Setter Property="Foreground"
+                    Value="#1E3A8A"/>
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+        </Style>
+        <Style Selector="DataGrid">
+            <Setter Property="IsReadOnly" Value="True"/>
+        </Style>
+    <Style Selector="TextBlock.PanelHeader">
+
+        <Setter Property="Foreground"
+                Value="White"/>
+
+        <Setter Property="FontWeight"
+                Value="Bold"/>
+
+        <Setter Property="FontSize"
+                Value="24"/>
+
+        <Setter Property="HorizontalAlignment"
+                Value="Center"/>
+
+        <Setter Property="Margin"
+                Value="0,0,0,12"/>
+
+    </Style>
+
+             </UserControl.Styles>
+  <Grid RowDefinitions="Auto,Auto,*"
+          Margin="20">
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="#132868"
+                CornerRadius="16"
+                Padding="20"
+                Margin="0,0,0,20">
+
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Image Source="avares://VolexCarousel/Assets/volex_logo.png" 
+     Width="100" 
+     Height="100" />
+                <TextBlock Grid.Column="1" Text="CAROUSEL MACHINE INFORMATION"
+                           FontSize="36"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
+<Image Grid.Column="2" Source="avares://VolexCarousel/Assets/dharma.png" 
+     Width="100" 
+     Height="100" />
+
+            </Grid>
+
+        </Border>
+
+        <!-- Top Statistics -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*,*"
+              ColumnSpacing="20"
+              Margin="0,0,0,20">
+
+            <Border Classes="StatCard">
+                <StackPanel>
+                    <TextBlock Text="TOTAL OUTPUT"
+                               Classes="CardTitle"/>
+                    <TextBlock Text="129"
+                               Classes="BigValue"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Classes="StatCard">
+                <StackPanel>
+                    <TextBlock Text="INFORMATION SPEED"
+                               Classes="CardTitle"/>
+                    <TextBlock Text="0.7"
+                               Classes="BigValue"/>
+                    <TextBlock Text="/MS"
+                               Classes="ValueUnit"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Classes="StatCard">
+                <StackPanel>
+                    <TextBlock Text="CT BOARD TO BOARD"
+                               Classes="CardTitle"/>
+                    <TextBlock Text="12"
+                               Classes="BigValue"/>
+                    <TextBlock Text="/SEC"
+                               Classes="ValueUnit"/>
+                </StackPanel>
+            </Border>
+        <Border Grid.Column="3"
+                        Background="#1B357F"
+                        CornerRadius="12"
+                        Padding="20,10">
+                        <Grid 
+                              RowDefinitions="15*,5*,80*">
+                    <Border BorderThickness="2" BorderBrush="AntiqueWhite" Padding="10" CornerRadius="10">
+                   <TextBlock HorizontalAlignment="Center" Text="13 December 2025   22:12:11 WIB"
+                               Foreground="White"
+                               FontWeight="SemiBold"/>
+                    </Border>
+                               <volexcarousel:ShiftTable Grid.Row="2" ShiftData="{Binding ShiftRows}"/>
+</Grid>
+
+
+         </Border>
+
+            
+        </Grid>
+
+        <!-- Shift Tables -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,*,*"
+              ColumnSpacing="20">
+
+            <controls:ShiftItemTable Grid.Column="0"
+                                 Title="Morning"
+                                 ShiftItems="{Binding PagiShiftRows}"
+                                />
+
+            <controls:ShiftItemTable Grid.Column="1"
+                                 Title="Day"
+                                 ShiftItems="{Binding SiangShiftRows}"
+                                />
+                                
+            <controls:ShiftItemTable Grid.Column="2"
+                                 Title="Night"
+                                 ShiftItems="{Binding MalamShiftRows}"
+                                />
+
+        </Grid>
+
+    </Grid>
+
+</UserControl>
