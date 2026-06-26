@@ -149,7 +149,21 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
+                            <DataGridTemplateColumn Header="Target">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                </DataTemplate>
+                             </DataGridTemplateColumn.HeaderTemplate>
+                             <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:ShiftRecordRowModel">
+                                <Grid ColumnDefinitions="50*,50*">                                    
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding Output}" Foreground="{Binding Output, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
+                                </Grid>
+                                </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="Outputs">
                             <DataGridTemplateColumn.HeaderTemplate>
                                 <DataTemplate>

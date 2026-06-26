@@ -3,6 +3,7 @@ using AvaloniaDialogs.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
+using Microsoft.Extensions.Logging;
 using VolexCarousel.Controls;
 using VolexCarousel.Store;
 using VolexCarousel.Views;
@@ -13,13 +14,22 @@ namespace VolexCarousel.ViewModels
     {
         private readonly LoginViewModel _loginViewModel;
         private readonly UserStore _userStore;
-        public MainWindowViewModel(LoginViewModel loginViewModel,UserStore userStore)
+        private readonly ILogger<MainWindowViewModel> _logger;
+        private readonly DashboardViewModel _dashboardViewModel;
+        public MainWindowViewModel(LoginViewModel loginViewModel,UserStore userStore,ILogger<MainWindowViewModel> logger,DashboardViewModel dvm)
         {
             _loginViewModel = loginViewModel;
             _userStore = userStore;
+            _logger = logger;
+            _dashboardViewModel = dvm;
+            logger.LogDebug("test");
+
+            logger.LogInformation("test");
+            logger.LogCritical("test");
+            _currentViewModel = _dashboardViewModel;
         }
         [ObservableProperty]
-        private ViewModelBase _currentViewModel = new DashboardViewModel();
+        private ViewModelBase _currentViewModel;
 
 
         [RelayCommand]

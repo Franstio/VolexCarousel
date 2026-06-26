@@ -205,12 +205,12 @@
               ColumnSpacing="20">
 
             <controls:ShiftItemTable Grid.Column="0"
-                                 Title="Morning"
+                                 Title="Day"
                                  ShiftItems="{Binding PagiShiftRows}"
                                 />
 
             <controls:ShiftItemTable Grid.Column="1"
-                                 Title="Day"
+                                 Title="Noon"
                                  ShiftItems="{Binding SiangShiftRows}"
                                 />
                                 

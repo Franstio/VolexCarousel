@@ -73,7 +73,7 @@
                 <Grid RowDefinitions="10*,90*">
 
                     
-                    <TextBlock Text="SHIFT"
+                    <TextBlock Text="DAILY OUTPUT"
                     Grid.Row="0" HorizontalAlignment="Center"
                                Classes="CardTitle2"/>
 
@@ -82,7 +82,7 @@
                     ItemsSource="{TemplateBinding ShiftData}"
                               AutoGenerateColumns="False">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Hours">
+                            <DataGridTemplateColumn Header="Shift">
                             <DataGridTemplateColumn.HeaderTemplate>
                                 <DataTemplate>
                                     <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
@@ -96,6 +96,21 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn Header="Target Output">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                </DataTemplate>
+                             </DataGridTemplateColumn.HeaderTemplate>
+                             <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:ShiftRowModel">
+                                <Grid ColumnDefinitions="50*,50*">                                    
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding TotalPcs}" Foreground="{Binding TotalPcs, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
+                                </Grid>
+                                </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Total Output">
                             <DataGridTemplateColumn.HeaderTemplate>
                                 <DataTemplate>
                                     <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
