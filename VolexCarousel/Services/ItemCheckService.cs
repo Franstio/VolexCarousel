@@ -46,7 +46,7 @@ namespace VolexCarousel.Services
                 {
                     ShiftTransactionRecord.Enqueue(new Models.ShiftTransactionRecord()
                     {
-                        InputTime = DateTime.Now,
+                        datetimeinput = DateTime.Now,
                     });
                     yield return ShiftTransactionRecord.Peek();
                 }

@@ -158,7 +158,7 @@
                              <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate DataType="models:ShiftRecordRowModel">
                                 <Grid ColumnDefinitions="50*,50*">                                    
-                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding Output}" Foreground="{Binding Output, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding TargetOutput}" />
                                     <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
                                 </Grid>
                                 </DataTemplate>
@@ -173,7 +173,7 @@
                              <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate DataType="models:ShiftRecordRowModel">
                                 <Grid ColumnDefinitions="50*,50*">                                    
-                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding Output}" Foreground="{Binding Output, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding Output}" Foreground="{Binding, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
                                     <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
                                 </Grid>
                                 </DataTemplate>

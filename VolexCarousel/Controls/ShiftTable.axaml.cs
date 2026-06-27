@@ -8,12 +8,12 @@ namespace VolexCarousel;
 
 public class ShiftTable : TemplatedControl
 {
-    public static readonly StyledProperty<ObservableCollection<ShiftRowModel>> ShiftDataProperty =
-        AvaloniaProperty.Register<ShiftTable, ObservableCollection<ShiftRowModel>>(
+    public static readonly StyledProperty<ObservableCollection<ShiftDailyOutputModel>> ShiftDataProperty =
+        AvaloniaProperty.Register<ShiftTable, ObservableCollection<ShiftDailyOutputModel>>(
             name: nameof(ShiftData),
-            defaultValue: new ObservableCollection<ShiftRowModel>());
+            defaultValue: new ObservableCollection<ShiftDailyOutputModel>());
 
-    public ObservableCollection<ShiftRowModel> ShiftData
+    public ObservableCollection<ShiftDailyOutputModel> ShiftData
     {
         get => GetValue(ShiftDataProperty);
         set => SetValue(ShiftDataProperty, value);

@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.IO;
 using System.Linq;
 using Avalonia;
@@ -6,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
@@ -24,16 +26,24 @@ namespace VolexCarousel
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        public override async void OnFrameworkInitializationCompleted()
         {
             ServiceCollection services = new ServiceCollection();
+
+            services.AddSingleton<AppSettingService>();
+            services.AddTransient<IDbConnection>((sp) =>
+            {
+
+                var setting = sp.GetRequiredService<AppSettingService>();
+                return new SqliteConnection(setting.LoadSettings().CarouselDb);
+            });
+            services.AddTransient<CarouselRepositoryService>();
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddSingleton<UserStore>();
             services.AddSingleton<TcpService>();
             services.AddSingleton<InformationSpeedService>();
-            services.AddSingleton<AppSettingService>();
 
             services.AddLogging(l =>
             {
@@ -42,6 +52,8 @@ namespace VolexCarousel
                     .CreateLogger());
             });
             var service = services.BuildServiceProvider();
+            var carouselRepo = service.GetRequiredService<CarouselRepositoryService>();
+            await carouselRepo.Initialization();
             var vm = service.GetService<MainWindowViewModel>();
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

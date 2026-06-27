@@ -89,8 +89,8 @@
                                 </DataTemplate>
                              </DataGridTemplateColumn.HeaderTemplate>
                             <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="models:ShiftRowModel">
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding TimeRange}"/>                                
+                                <DataTemplate DataType="models:ShiftDailyOutputModel">
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding ShiftName}"/>                                
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -102,9 +102,9 @@
                                 </DataTemplate>
                              </DataGridTemplateColumn.HeaderTemplate>
                              <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="models:ShiftRowModel">
+                                <DataTemplate DataType="models:ShiftDailyOutputModel">
                                 <Grid ColumnDefinitions="50*,50*">                                    
-                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding TotalPcs}" Foreground="{Binding TotalPcs, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding TargetOutput}" />
                                     <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
                                 </Grid>
                                 </DataTemplate>
@@ -117,9 +117,9 @@
                                 </DataTemplate>
                              </DataGridTemplateColumn.HeaderTemplate>
                              <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="models:ShiftRowModel">
+                                <DataTemplate DataType="models:ShiftDailyOutputModel">
                                 <Grid ColumnDefinitions="50*,50*">                                    
-                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding TotalPcs}" Foreground="{Binding TotalPcs, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
+                                    <TextBlock  HorizontalAlignment="Right" Text="{Binding TotalOutput}" Foreground="{Binding, Converter={StaticResource PCStoColorIndicatorConverter}}"/>
                                     <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text=" PCS"/>
                                 </Grid>
                                 </DataTemplate>
