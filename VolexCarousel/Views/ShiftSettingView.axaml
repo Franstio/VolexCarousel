@@ -5,6 +5,8 @@
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
              Background="#132868"
              Width="900" Height="450"
+             xmlns:vm="using:VolexCarousel.ViewModels"
+             x:DataType="vm:ShiftSetttingViewModel"
              x:Class="VolexCarousel.Views.ShiftSettingView">
 
              <Border 
@@ -30,16 +32,16 @@
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Foreground="White"
-                                Text="Morning Shift:"
+                                Text="Day Shift:"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Stretch"
                                 FontSize="32"
                                 />
                                 <StackPanel Orientation="Horizontal" Spacing="5" Grid.Column="2">
                             
-                                <TimePicker ClockIdentifier="24HourClock" />
+                                <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding DayShiftTimeStart}"/>
                                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="32">-</TextBlock>
-                                <TimePicker ClockIdentifier="24HourClock" />
+                                <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding DayShiftTimeEnd}" />
                                 </StackPanel>
                             </Grid>
                             <Grid ColumnSpacing="30" ColumnDefinitions="35*,75*">
@@ -47,7 +49,7 @@
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Foreground="White"
-                                Text="Day Shift:"
+                                Text="Noon Shift:"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Stretch"
                                 FontSize="32"
@@ -55,9 +57,9 @@
                         
                                 <StackPanel Orientation="Horizontal" Spacing="5" Grid.Column="2">
                             
-                                <TimePicker ClockIdentifier="24HourClock" />
+                                <TimePicker SelectedTime="{Binding NoonShiftTimeStart}" ClockIdentifier="24HourClock" />
                                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="32">-</TextBlock>
-                                <TimePicker ClockIdentifier="24HourClock" />
+                                <TimePicker SelectedTime="{Binding NoonShiftTimeEnd}" ClockIdentifier="24HourClock" />
                                 </StackPanel>
                              </Grid>
                              <Grid ColumnDefinitions="35*,75*" ColumnSpacing="30">
@@ -72,13 +74,13 @@
                                 />
                                 <StackPanel Orientation="Horizontal" Spacing="5" Grid.Column="1">
                             
-                                <TimePicker ClockIdentifier="24HourClock" />
+                                <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding NightShiftTimeStart}" />
                                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="32">-</TextBlock>
-                                <TimePicker ClockIdentifier="24HourClock" />
+                                <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding NoonShiftTimeEnd}" />
                                 </StackPanel>
                                 </Grid>
                         
-                        <Button Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Foreground="White">Save</Button>
+                        <Button Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10"  Foreground="White" Command="{Binding SetAllShiftCommand}" >Save</Button>
                         </StackPanel>
 
     </TabItem>
@@ -99,7 +101,7 @@
                                 VerticalAlignment="Stretch"
                                 FontSize="32"
                                 />
-                                <TextBox Grid.Column="1" FontSize="32"/>
+                                <TextBox Text="{Binding Title}" Grid.Column="1" FontSize="32"/>
                                 <TextBlock 
                                 Grid.Row="1"
                                 Grid.Column="0"
@@ -109,11 +111,11 @@
                                 VerticalAlignment="Stretch"
                                 FontSize="32"
                                 />
-                                <TextBox Grid.Column="1" Grid.Row="1" FontSize="32"/>
+                                <NumericUpDown Value="{Binding TargetOutputShift}" Grid.Column="1" Grid.Row="1" FontSize="32"/>
                                 
                             </Grid>
                             
-                        <Button Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Foreground="White">Save</Button>
+                        <Button Command="{Binding SetAppinfoCommand}" Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Foreground="White">Save</Button>
                           </StackPanel>
     </TabItem>
   </TabControl>

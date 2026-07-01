@@ -16,6 +16,8 @@ namespace VolexCarousel.Services
         public readonly string db_scheme = @"CREATE TABLE IF NOT EXISTS ""tbl_shift"" (
 	""shiftname""	TEXT,
 	""targetoutput""	INTEGER NOT NULL,
+    ""shiftstart"" TEXT NOT NULL,
+    ""shiftend"" TEXT NOT NULL,  
 	PRIMARY KEY(""shiftname"")
 );
 CREATE TABLE IF NOT EXISTS ""tbl_shiftrecord"" (
@@ -32,15 +34,15 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
 	PRIMARY KEY(""username"")
 );
 ";
-		private readonly ILogger<CarouselRepositoryService> logger;
-		private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
-		private readonly IDbConnection db;
+        private readonly ILogger<CarouselRepositoryService> logger;
+        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        private readonly IDbConnection db;
 
-		public CarouselRepositoryService(ILogger<CarouselRepositoryService> logger, IDbConnection db)
-		{
-			this.logger = logger;
-			this.db = db;
-		}
+        public CarouselRepositoryService(ILogger<CarouselRepositoryService> logger, IDbConnection db)
+        {
+            this.logger = logger;
+            this.db = db;
+        }
         public async Task Initialization()
         {
             using (db)
@@ -73,14 +75,14 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             }
         }
 
-        public async Task<IEnumerable<User>> GetUser(string? username=null)
+        public async Task<IEnumerable<User>> GetUser(string? username = null)
         {
             using (db)
             {
                 try
                 {
                     db.Open();
-                    return await db.QueryAsync<User>($"Select username,password from tbl_users where username=@username or @username is null", new { username});
+                    return await db.QueryAsync<User>($"Select username,password from tbl_users where username=@username or @username is null", new { username });
                 }
                 catch (Exception e)
                 {
@@ -90,32 +92,32 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             }
         }
 
-		public async Task RecordItemInput(ShiftTransactionRecord record)
-		{
-			using (db)
-			{
-				IDbTransaction tr = null!;
-				try
-				{
-					await semaphore.WaitAsync();
+        public async Task RecordItemInput(ShiftTransactionRecord record)
+        {
+            using (db)
+            {
+                IDbTransaction tr = null!;
+                try
+                {
+                    await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
                     await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput) values(@shiftname,@datetimeinput,@datetimeoutput);", record);
                     tr.Commit();
                 }
-				catch (Exception e)
-				{
-					logger.LogError(e.Message + " | " + e.StackTrace);
-					tr.Rollback();
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message + " | " + e.StackTrace);
+                    tr.Rollback();
                 }
-				finally
-				{
-					semaphore.Release();
-				}
-			}
-		}
-        
-        public async Task<IEnumerable<ShiftTransactionRecord>> GetRecordItems(int limit =100)
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+        }
+
+        public async Task<IEnumerable<ShiftTransactionRecord>> GetRecordItems(int limit = 100)
         {
             using (db)
             {
@@ -123,16 +125,16 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 {
                     db.Open();
                     var query = await db.QueryAsync<ShiftTransactionRecord>($"Select shiftname,datetimeinput,datetimeoutput,targetoutput from tbl_shiftrecord order by datetimeoutput desc limit @limit", limit);
-					return query;
+                    return query;
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e.Message + " | " + e.StackTrace);
-					return [];
+                    return [];
                 }
             }
         }
-        public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string shift,int limit = 100)
+        public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string shift, int limit = 100)
         {
             using (db)
             {
@@ -196,6 +198,96 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             }
         }
 
-    }
+        public async Task UpdateTargetOutput(int targetOutput, string? shift = null)
+        {
+            using (db)
+            {
+                IDbTransaction tr = null!;
+                try
+                {
+                    await semaphore.WaitAsync();
+                    db.Open();
+                    tr = db.BeginTransaction(IsolationLevel.Serializable);
+                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput where shiftname=@shiftname or @shiftname is null", new { shiftname = shift, targetoutput = targetOutput });
+                    tr.Commit();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message + " | " + e.StackTrace);
+                    tr.Rollback();
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+        }
+        public async Task<IEnumerable< ShiftMasterRecord>> GetShift(string? shift = null)
+        {
+            using (db)
+            {
+                try
+                {
+                    db.Open();
+                    var query = await db.QueryAsync<ShiftMasterRecord>("Select shiftname,targetoutput,shiftstart,shiftend from tbl_shift where shiftname=@shift or @shift is null", new { shift });
+                    return query;
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message + " | " + e.StackTrace);
+                    return [];
+                }
+            }
+        }
 
+        public async Task AddShift(ShiftMasterRecord shift)
+        {
+            using (db)
+            {
+                IDbTransaction tr = null!;
+                try
+                {
+                    await semaphore.WaitAsync();
+                    db.Open();
+                    tr = db.BeginTransaction(IsolationLevel.Serializable);
+                    await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetoutput,shiftstart,shiftend) values(@shiftname,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString("HH:mm:ss"), shiftend = shift.shiftend.ToString("HH:mm:ss") });
+                    tr.Commit();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message + " | " + e.StackTrace);
+                    tr.Rollback();
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+        }
+
+        public async Task UpdateShiftMaster(string shift, ShiftMasterRecord shiftData)
+        {
+            using (db)
+            {
+                IDbTransaction tr = null!;
+                try
+                {
+                    await semaphore.WaitAsync();
+                    db.Open();
+                    tr = db.BeginTransaction(IsolationLevel.Serializable);
+                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, shiftstart = shiftData.shiftstart.ToString(@"hh:mm:ss"), shiftend =shiftData.shiftend.ToString(@"hh:mm:ss") });
+                    tr.Commit();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message + " | " + e.StackTrace);
+                    tr.Rollback();
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+        }
+    }
 }

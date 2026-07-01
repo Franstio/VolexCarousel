@@ -10,5 +10,8 @@ namespace VolexCarousel.Models
     {
         public string shiftname { get; set; } = string.Empty;
         public int targetoutput { get; set; } = 0;
+
+        public TimeSpan shiftstart { get; set; } 
+        public TimeSpan shiftend { get; set;  }
     }
 }
