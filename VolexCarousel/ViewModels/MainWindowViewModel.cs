@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using Microsoft.Extensions.Logging;
+using System;
 using VolexCarousel.Controls;
 using VolexCarousel.Store;
 using VolexCarousel.Views;
@@ -35,17 +36,22 @@ namespace VolexCarousel.ViewModels
         [RelayCommand]
         public void ShowShiftsView()
         {
-            DialogHost.Show(_loginViewModel, new DialogClosingEventHandler(async (obj, e) =>
+            if (_userStore.User is null)
             {
-                var usr = _userStore.User;
-                if (usr is not null)
+                DialogHost.Show(_loginViewModel, new DialogClosingEventHandler(async (obj, e) =>
                 {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    var usr = _userStore.User;
+                    if (usr is not null)
                     {
-                        await DialogHost.Show(new ShiftSettingView());
-                    });
-                }
-            }));
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await DialogHost.Show(new ShiftSettingView());
+                        });
+                    }
+                }));
+                return;
+            }
+            DialogHost.Show(new ShiftSettingView());
         }
     }
 }
