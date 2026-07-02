@@ -41,7 +41,7 @@ namespace VolexCarousel
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<LoginViewModel>();
-            services.AddTransient<ShiftSetttingViewModel>();
+            services.AddTransient<ShiftSettingViewModel>();
             services.AddSingleton<UserStore>();
             services.AddSingleton<TcpService>();
             services.AddSingleton<InformationSpeedService>();

@@ -6,7 +6,7 @@
              Background="#132868"
              Width="900" Height="450"
              xmlns:vm="using:VolexCarousel.ViewModels"
-             x:DataType="vm:ShiftSetttingViewModel"
+             x:DataType="vm:ShiftSettingViewModel"
              x:Class="VolexCarousel.Views.ShiftSettingView">
 
              <Border 

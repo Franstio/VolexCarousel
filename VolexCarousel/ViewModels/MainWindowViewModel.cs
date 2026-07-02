@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using Microsoft.Extensions.Logging;
+using SQLitePCL;
 using System;
 using VolexCarousel.Controls;
 using VolexCarousel.Store;
@@ -17,11 +18,13 @@ namespace VolexCarousel.ViewModels
         private readonly UserStore _userStore;
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly DashboardViewModel _dashboardViewModel;
-        public MainWindowViewModel(LoginViewModel loginViewModel,UserStore userStore,ILogger<MainWindowViewModel> logger,DashboardViewModel dvm)
+        private readonly ShiftSettingViewModel _shiftSetttingViewModel;
+        public MainWindowViewModel(LoginViewModel loginViewModel,UserStore userStore,ILogger<MainWindowViewModel> logger,DashboardViewModel dvm,ShiftSettingViewModel shiftSetttingViewModel)
         {
             _loginViewModel = loginViewModel;
             _userStore = userStore;
             _logger = logger;
+            _shiftSetttingViewModel = shiftSetttingViewModel;
             _dashboardViewModel = dvm;
             logger.LogDebug("test");
 
@@ -45,13 +48,13 @@ namespace VolexCarousel.ViewModels
                     {
                         await Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            await DialogHost.Show(new ShiftSettingView());
+                            await DialogHost.Show(_shiftSetttingViewModel);
                         });
                     }
                 }));
                 return;
             }
-            DialogHost.Show(new ShiftSettingView());
+            DialogHost.Show(_shiftSetttingViewModel);
         }
     }
 }

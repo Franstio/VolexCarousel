@@ -10,7 +10,7 @@ using VolexCarousel.Services;
 
 namespace VolexCarousel.ViewModels
 {
-    public partial class ShiftSetttingViewModel: ViewModelBase
+    public partial class ShiftSettingViewModel: ViewModelBase
     {
         private readonly AppSettingService AppSettingService = null!;
         private readonly CarouselRepositoryService CarouselRepositoryService = null!;
@@ -36,7 +36,7 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty]
         public int targetOutputShift = 0;
 
-        public ShiftSetttingViewModel(AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService)
+        public ShiftSettingViewModel(AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService)
         {
             AppSettingService = appSettingService;
             CarouselRepositoryService = carouselRepositoryService;
