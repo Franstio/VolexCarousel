@@ -76,7 +76,7 @@
                             
                                 <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding NightShiftTimeStart}" />
                                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="32">-</TextBlock>
-                                <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding NoonShiftTimeEnd}" />
+                                <TimePicker ClockIdentifier="24HourClock" SelectedTime="{Binding NightShiftTimeEnd}" />
                                 </StackPanel>
                                 </Grid>
                         

@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetoutput,shiftstart,shiftend) values(@shiftname,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString("HH:mm:ss"), shiftend = shift.shiftend.ToString("HH:mm:ss") });
+                    await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetoutput,shiftstart,shiftend) values(@shiftname,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString(@"hh\:mm\:ss"), shiftend = shift.shiftend.ToString(@"hh\:mm\:ss") });
                     tr.Commit();
                 }
                 catch (Exception e)
@@ -275,7 +275,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, shiftstart = shiftData.shiftstart.ToString(@"hh:mm:ss"), shiftend =shiftData.shiftend.ToString(@"hh:mm:ss") });
+                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, shiftstart = shiftData.shiftstart.ToString(@"hh\:mm\:ss"), shiftend =shiftData.shiftend.ToString(@"hh\:mm\:ss") });
                     tr.Commit();
                 }
                 catch (Exception e)

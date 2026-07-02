@@ -127,7 +127,7 @@
                 <Image Source="avares://VolexCarousel/Assets/volex_logo.png" 
      Width="100" 
      Height="100" />
-                <TextBlock Grid.Column="1" Text="CAROUSEL MACHINE INFORMATION"
+                <TextBlock Grid.Column="1" Text="{Binding Title}"
                            FontSize="36"
                            FontWeight="Bold"
                            Foreground="White"

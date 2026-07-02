@@ -23,16 +23,20 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty]
         string informationSpeedData = string.Empty;
 
+        [ObservableProperty]
+        string title = "CAROUSEL MACHINE INFORMATION";
+        private AppSettingService AppSettingService;
+
         private readonly InformationSpeedService _informationSpeedService;
 
         private static CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-        public DashboardViewModel(InformationSpeedService informationSpeedService)
+        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService)
         {
             _informationSpeedService = informationSpeedService;
             Random rnd = new Random();
             for (int i = 0; i < 100; i++)
             {
-                PagiShiftRows.Add(new ShiftRecordRowModel { Timestamp = DateTime.Today.AddHours(rnd.Next(0, 13)).AddMinutes(rnd.Next(0, 61)), Output = rnd.Next(100, 2000),TargetOutput=1000 });
+                PagiShiftRows.Add(new ShiftRecordRowModel { Timestamp = DateTime.Today.AddHours(rnd.Next(0, 13)).AddMinutes(rnd.Next(0, 61)), Output = rnd.Next(100, 2000), TargetOutput = 1000 });
             }
             for (int i = 0; i < 100; i++)
             {
@@ -43,12 +47,17 @@ namespace VolexCarousel.ViewModels
                 MalamShiftRows.Add(new ShiftRecordRowModel { Timestamp = DateTime.Today.AddHours(rnd.Next(18, 25)).AddMinutes(rnd.Next(0, 61)), Output = rnd.Next(100, 2000), TargetOutput = 1000 });
             }
 
-            ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Day", TargetOutput = 1000, TotalOutput = PagiShiftRows.Sum(x=>x.Output) });
+            ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Day", TargetOutput = 1000, TotalOutput = PagiShiftRows.Sum(x => x.Output) });
             ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Noon", TargetOutput = 1000, TotalOutput = SiangShiftRows.Sum(x => x.Output) });
             ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Night", TargetOutput = 1000, TotalOutput = MalamShiftRows.Sum(x => x.Output) });
             PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(PagiShiftRows.OrderBy(x => x.Timestamp));
             SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(SiangShiftRows.OrderBy(x => x.Timestamp));
             MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(MalamShiftRows.OrderBy(x => x.Timestamp));
+            AppSettingService = appSettingService;
+            if (!string.IsNullOrEmpty(appSettingService.LoadSettings().Title))
+            {
+                Title = appSettingService.LoadSettings().Title;
+            }
         }
 
         public void StartInformationSpeedService()

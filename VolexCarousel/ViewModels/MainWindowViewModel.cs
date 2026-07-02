@@ -48,13 +48,15 @@ namespace VolexCarousel.ViewModels
                     {
                         await Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            await DialogHost.Show(_shiftSetttingViewModel);
+                            await DialogHost.Show(_shiftSetttingViewModel, new DialogOpenedEventHandler(async (obj, s) =>
+                            {
+                                _userStore.User = null;
+                            }));
                         });
                     }
                 }));
                 return;
             }
-            DialogHost.Show(_shiftSetttingViewModel);
         }
     }
 }
