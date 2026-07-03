@@ -11,15 +11,15 @@ using VolexCarousel.Models;
 
 namespace VolexCarousel.Services
 {
-    public class ItemCheckService
+    public class ModbusItemCheckService
     {
         private readonly TCPModbusService _modbusService;
-        private readonly ILogger<ItemCheckService> _logger;
+        private readonly ILogger<ModbusItemCheckService> _logger;
         private readonly byte INPUT_ADDRESS = 1;
         private readonly byte OUTPUT_ADDRESS = 2;
         private DateTime _boxByBoxRecord = DateTime.Now;
         private Queue<ShiftTransactionRecord> ShiftTransactionRecord = [];
-        public ItemCheckService(TCPModbusService modbusService, ILogger<ItemCheckService> logger)
+        public ModbusItemCheckService(TCPModbusService modbusService, ILogger<ModbusItemCheckService> logger)
         {
             _modbusService = modbusService;
             _logger = logger;
