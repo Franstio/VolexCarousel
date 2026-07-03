@@ -7,13 +7,14 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VolexCarousel.Interfaces;
 
 namespace VolexCarousel.Services
 {
-    public class TCPModbusService
+    public class TCPModbusService : ICheckItemService
     {
         private  IModbusMaster modbus = null!;
-        private readonly TcpClient tcpClient;
+        private  TcpClient tcpClient;
         private readonly ILogger<TCPModbusService> logger;
         private readonly AppSettingService settingService;
         private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
@@ -31,6 +32,7 @@ namespace VolexCarousel.Services
             {
                 if (tcpClient.Connected)
                     return;
+                tcpClient = new TcpClient();
                 ModbusFactory factory = new ModbusFactory();
                 string data = settingService.LoadSettings().PLCPort;
                 tcpClient.Connect(data.Split(':')[0], Convert.ToInt32(data.Split(":")[1]));
@@ -96,5 +98,10 @@ namespace VolexCarousel.Services
             }
         }
 
+        public async Task<string> CheckItemAsync(object id)
+        {
+            var data= await ReadData(Convert.ToUInt16(id.ToString()!));
+            return data.Any() ? data[0].ToString() : string.Empty;
+        }
     }
 }

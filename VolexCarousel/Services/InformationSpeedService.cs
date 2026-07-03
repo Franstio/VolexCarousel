@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -9,15 +11,15 @@ using System.Threading.Tasks;
 
 namespace VolexCarousel.Services
 {
-    public class InformationSpeedService
+    public class InformationSpeedService : TcpService
     {
-        private readonly TcpService _tcpService;
         private readonly ILogger<InformationSpeedService> _logger;
+        private readonly ILogger<TcpService> _tcpLogger;
         private readonly AppSettingService _appSettingService;
 
-        public InformationSpeedService(TcpService tcpService, ILogger<InformationSpeedService> logger, AppSettingService appSettingService)
+        public InformationSpeedService(ILogger<TcpService> tcpLogger, ILogger<InformationSpeedService> logger, AppSettingService appSettingService) : base(tcpLogger)
         {
-            _tcpService = tcpService;
+            _tcpLogger = tcpLogger;
             _logger = logger;
             _appSettingService = appSettingService;
         }
@@ -27,11 +29,12 @@ namespace VolexCarousel.Services
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (!_tcpService.IsConnected)
+                if (!IsConnected)
                 {
                     try
                     {
-                        _tcpService.Start();
+                        IPEndPoint endpoint = IPEndPoint.Parse(_appSettingService.LoadSettings().InformationSpeedPort);
+                        Start(endpoint);
                     }
                     catch (Exception ex)
                     {
@@ -40,9 +43,10 @@ namespace VolexCarousel.Services
                         continue;
                     }
                 }
-                var data = await _tcpService.ReadData();
+                var data = await ReadData();
                 yield return data;
             }
+            Stop();
         }
     }
 }

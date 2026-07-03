@@ -1,35 +1,53 @@
 ﻿using Microsoft.Extensions.Logging;
+using NModbus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VolexCarousel.Interfaces;
 
 namespace VolexCarousel.Services
 {
-    public class TCPPLCService
+    public class TCPPLCService : TcpService,ICheckItemService
     {
-        private readonly TcpService _tcpService;
         private readonly ILogger<TCPPLCService> _logger;
         private readonly AppSettingService _appSettingService;
-        public TCPPLCService(TcpService tcpService, ILogger<TCPPLCService> logger, AppSettingService appSettingService)
+        public TCPPLCService(ILogger<TCPPLCService> logger, AppSettingService appSettingService,ILogger<TcpService> tcpLogger) : base(tcpLogger)
         {
-            _tcpService = tcpService;
             _logger = logger;
             _appSettingService = appSettingService;
         }
+        public void Start()
+        {
+            try
+            {
+                if (IsConnected)
+                    return;
+                IPEndPoint endpoint = IPEndPoint.Parse(_appSettingService.LoadSettings().PLCPort);
+                Start(endpoint);
+            }
+
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message + " | " + e.StackTrace);
+            }
+        }
+
 
         public async Task<string> WriteCommand(string command,string value)
         {
-            string result = await _tcpService.WriteData($"WR {command} {value}\r\n");
+            string result = await WriteData($"WR {command} {value}\r\n");
             _logger.LogDebug(result);
             return result;
         }
 
         public async Task<string> ReadCommand(string command)
         {
-            string result = await _tcpService.WriteData($"RD {command}\r\n");
+            string result = await WriteData($"RD {command}\r\n");
             _logger.LogDebug(result);
             return result;
         }
@@ -39,12 +57,17 @@ namespace VolexCarousel.Services
             List<string> results = [];
             for (int i = 0; i < values.Length; i++)
             {
-                string result = await _tcpService.WriteData($"WR {command} {values[i]}\r\n");
+                string result = await WriteData($"WR {command} {values[i]}\r\n");
                 _logger.LogDebug(result);
                 results.Add(result);
                 await Task.Delay(interval);
             }
             return results;
+        }
+
+        public async Task<string> CheckItemAsync(object id)
+        {
+            return await ReadCommand(id.ToString()!);
         }
     }
 }

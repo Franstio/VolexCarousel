@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -9,33 +10,28 @@ using System.Threading.Tasks;
 
 namespace VolexCarousel.Services
 {
-    public class TcpService
+    public abstract class TcpService
     {
         private readonly ILogger<TcpService> _logger;
-        private readonly AppSettingService _appSettingService;
-        private readonly TcpClient _tcpClient;
+        private  TcpClient _tcpClient;
         private NetworkStream? _networkStream = null;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         public bool IsConnected => _tcpClient.Connected;
-        public TcpService(ILogger<TcpService> logger, AppSettingService appSettingService)
+        public TcpService(ILogger<TcpService> logger)
         {
             _logger = logger;
-            _appSettingService = appSettingService;
             _tcpClient = new TcpClient();
         }
-        public void Start()
+        public void Start(IPEndPoint endpoint)
         {
             try
             {
                 if (_tcpClient.Connected)
                     return;
-                var AppSettings = _appSettingService.LoadSettings();
-                string data = AppSettings.InformationSpeedPort;
-                string ip = data.Split(':')[0];
-                int port = int.Parse(data.Split(':')[1]);
-                _tcpClient.Connect(ip, port);
+                _tcpClient = new TcpClient();
+                _tcpClient.Connect(endpoint);
                 _networkStream = _tcpClient.GetStream();
-                _logger.LogInformation($"Connected to Information Speed at {ip}:{port}");
+                _logger.LogInformation($"Connected to Information Speed at {endpoint.Address}:{endpoint.Port}");
             }
             catch (Exception ex)
             {

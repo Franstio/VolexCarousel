@@ -12,6 +12,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
+using VolexCarousel.Interfaces;
 using VolexCarousel.Mappers;
 using VolexCarousel.Services;
 using VolexCarousel.Store;
@@ -46,8 +47,10 @@ namespace VolexCarousel
             services.AddTransient<LoginViewModel>();
             services.AddTransient<ShiftSettingViewModel>();
             services.AddSingleton<UserStore>();
-            services.AddSingleton<TcpService>();
             services.AddSingleton<InformationSpeedService>();
+            services.AddSingleton<TCPPLCService>();
+            services.AddSingleton<ICheckItemService>(sp => sp.GetRequiredService<TCPPLCService>());
+            services.AddSingleton<ItemCheckService>();
 
             services.AddLogging(l =>
             {

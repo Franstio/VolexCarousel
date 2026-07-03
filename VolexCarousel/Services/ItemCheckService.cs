@@ -7,21 +7,22 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VolexCarousel.Interfaces;
 using VolexCarousel.Models;
 
 namespace VolexCarousel.Services
 {
-    public class KeyenceItemCheckService
+    public class ItemCheckService
     {
         private Guid uid = Guid.NewGuid();
-        private readonly TCPPLCService _plcService;
-        private readonly ILogger<KeyenceItemCheckService> _logger;
+        private readonly ICheckItemService _plcService;
+        private readonly ILogger<ItemCheckService> _logger;
         private readonly string INPUT_ADDRESS = "";
         private readonly string OUTPUT_ADDRESS = "";
         private DateTime _boxByBoxRecord = DateTime.Now;
         private Queue<ShiftTransactionRecord> ShiftTransactionRecord = [];
         private readonly CarouselRepositoryService carouselRepositoryService;
-        public KeyenceItemCheckService(TCPPLCService tcpPLCService, ILogger<KeyenceItemCheckService> logger,
+        public ItemCheckService(ICheckItemService tcpPLCService, ILogger<ItemCheckService> logger,
             CarouselRepositoryService carouselRepositoryService)
         {
             _plcService = tcpPLCService;
@@ -32,18 +33,19 @@ namespace VolexCarousel.Services
 
         public async Task<bool> CheckItemInput()
         {
-            var data = await _plcService.ReadCommand(INPUT_ADDRESS);
+            var data = await _plcService.CheckItemAsync(INPUT_ADDRESS);
             return !string.IsNullOrEmpty(data) ? data == "OK" : false;
         }
 
         public async Task<bool> CheckItemOutput()
         {
-            var data = await _plcService.ReadCommand(OUTPUT_ADDRESS);
+            var data = await _plcService.CheckItemAsync(OUTPUT_ADDRESS);
             return !string.IsNullOrEmpty(data) ? data == "OK" : false;
         }
 
         public async IAsyncEnumerable<ShiftTransactionRecord> RunCheckInput([EnumeratorCancellation] CancellationToken cancelTokenSource=default)
         {
+            _plcService.Start();
             while (!cancelTokenSource.IsCancellationRequested)
             {
                 await Task.Delay(100);
@@ -64,6 +66,7 @@ namespace VolexCarousel.Services
 
         public async IAsyncEnumerable<ShiftTransactionRecord> RunCheckOutput([EnumeratorCancellation] CancellationToken cancelTokenSource = default)
         {
+            _plcService.Start();
             while (!cancelTokenSource.IsCancellationRequested)
             {
                 await Task.Delay(100);

@@ -28,11 +28,13 @@ namespace VolexCarousel.ViewModels
         private AppSettingService AppSettingService;
 
         private readonly InformationSpeedService _informationSpeedService;
+        private readonly ItemCheckService _itemCheckService;
 
         private static CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService)
+        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, ItemCheckService itemCheckService)
         {
             _informationSpeedService = informationSpeedService;
+            _itemCheckService = itemCheckService;
             Random rnd = new Random();
             for (int i = 0; i < 100; i++)
             {
@@ -58,6 +60,7 @@ namespace VolexCarousel.ViewModels
             {
                 Title = appSettingService.LoadSettings().Title;
             }
+
         }
 
         public void StartInformationSpeedService()

@@ -29,7 +29,7 @@
     <dialogHost:DialogHost CloseOnClickAway="True" Identifier="Root_Dialog" >
         <DockPanel>
             <Menu DockPanel.Dock="Top">
-                <MenuItem Header="_Settings" Command="{Binding ShowShiftsViewCommand}"/>
+                <MenuItem Foreground="White" Header="_Settings" Command="{Binding ShowShiftsViewCommand}"/>
             </Menu>
             <ContentControl  Content="{Binding CurrentViewModel}"/>
         </DockPanel>
