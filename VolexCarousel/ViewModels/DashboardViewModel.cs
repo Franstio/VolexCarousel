@@ -15,46 +15,41 @@ namespace VolexCarousel.ViewModels
 {
     public partial class DashboardViewModel : ViewModelBase
     {
-        public ObservableCollection<ShiftRecordRowModel> PagiShiftRows { get; set; } = new ObservableCollection<ShiftRecordRowModel>();
-        public ObservableCollection<ShiftRecordRowModel> SiangShiftRows { get; set; } = new ObservableCollection<ShiftRecordRowModel>();
-        public ObservableCollection<ShiftRecordRowModel> MalamShiftRows { get; set; } = new ObservableCollection<ShiftRecordRowModel>();
-        public ObservableCollection<ShiftDailyOutputModel> ShiftRows { get; set; } = new ObservableCollection<ShiftDailyOutputModel>();
 
-        [ObservableProperty]
-        string informationSpeedData = string.Empty;
+        [ObservableProperty] ObservableCollection<ShiftRecordRowModel> pagiShiftRows = new ObservableCollection<ShiftRecordRowModel>();
+
+        [ObservableProperty] ObservableCollection<ShiftRecordRowModel> siangShiftRows = new ObservableCollection<ShiftRecordRowModel>();
+
+        [ObservableProperty] ObservableCollection<ShiftRecordRowModel> malamShiftRows = new ObservableCollection<ShiftRecordRowModel>();
+
+        [ObservableProperty] ObservableCollection<ShiftDailyOutputModel> shiftRows = new ObservableCollection<ShiftDailyOutputModel>();
+        
 
         [ObservableProperty]
         string title = "CAROUSEL MACHINE INFORMATION";
-        private AppSettingService AppSettingService;
+        [ObservableProperty]
+        string boxByBox = TimeSpan.Zero.TotalSeconds.ToString();
 
+        [ObservableProperty]
+        string informationSpeedData = "0";
+
+        [ObservableProperty]
+        string totalOutput = "0";
+
+        private AppSettingService AppSettingService;
+        private List<ShiftTransactionRecord> ShiftTransactionRecords = [];
+        private DateTime startTime = DateTime.Now;
         private readonly InformationSpeedService _informationSpeedService;
         private readonly ItemCheckService _itemCheckService;
+        private readonly CarouselRepositoryService _carouselRepositoryService;
 
         private static CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, ItemCheckService itemCheckService)
+        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, ItemCheckService itemCheckService, CarouselRepositoryService carouselRepositoryService)
         {
             _informationSpeedService = informationSpeedService;
             _itemCheckService = itemCheckService;
-            Random rnd = new Random();
-            for (int i = 0; i < 100; i++)
-            {
-                PagiShiftRows.Add(new ShiftRecordRowModel { Timestamp = DateTime.Today.AddHours(rnd.Next(0, 13)).AddMinutes(rnd.Next(0, 61)), Output = rnd.Next(100, 2000), TargetOutput = 1000 });
-            }
-            for (int i = 0; i < 100; i++)
-            {
-                SiangShiftRows.Add(new ShiftRecordRowModel { Timestamp = DateTime.Today.AddHours(rnd.Next(12, 19)).AddMinutes(rnd.Next(0, 61)), Output = rnd.Next(100, 2000), TargetOutput = 1000 });
-            }
-            for (int i = 0; i < 100; i++)
-            {
-                MalamShiftRows.Add(new ShiftRecordRowModel { Timestamp = DateTime.Today.AddHours(rnd.Next(18, 25)).AddMinutes(rnd.Next(0, 61)), Output = rnd.Next(100, 2000), TargetOutput = 1000 });
-            }
+            _carouselRepositoryService = carouselRepositoryService;
 
-            ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Day", TargetOutput = 1000, TotalOutput = PagiShiftRows.Sum(x => x.Output) });
-            ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Noon", TargetOutput = 1000, TotalOutput = SiangShiftRows.Sum(x => x.Output) });
-            ShiftRows.Add(new ShiftDailyOutputModel { ShiftName = "Night", TargetOutput = 1000, TotalOutput = MalamShiftRows.Sum(x => x.Output) });
-            PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(PagiShiftRows.OrderBy(x => x.Timestamp));
-            SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(SiangShiftRows.OrderBy(x => x.Timestamp));
-            MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(MalamShiftRows.OrderBy(x => x.Timestamp));
             AppSettingService = appSettingService;
             if (!string.IsNullOrEmpty(appSettingService.LoadSettings().Title))
             {
@@ -62,7 +57,61 @@ namespace VolexCarousel.ViewModels
             }
 
         }
+        public async void Initialization()
+        {
+            await LoadInitData();
+            StartItemCheckInputService();
+            StartItemCheckOutputService();
+            StartInformationSpeedService();
+        }
 
+        private async Task LoadInitData()
+        {
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+
+
+                ShiftRows = new ObservableCollection<ShiftDailyOutputModel>(await _carouselRepositoryService.GetDailyOutput());
+                ShiftTransactionRecords.AddRange(await _carouselRepositoryService.GetTodayShiftRecord());
+                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(
+                 _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Day")));
+                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(
+                 _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Noon")));
+                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(
+                 _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Night")));
+            });
+        }
+        private async Task SetDataShifts(ShiftTransactionRecord record)
+        {
+            ShiftTransactionRecords.Add(record);
+            var records = ShiftTransactionRecords.Where(x => x.shiftname == record.shiftname).OrderBy(x => x.datetimeinput);
+            if (record.shiftname == "Day")
+            {
+                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(records));
+                
+            }
+            else if (record.shiftname == "Noon")
+            {
+                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(records));
+            }
+            else if (record.shiftname == "Night")
+            {
+                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(records));
+            }
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                ShiftRows = new ObservableCollection<ShiftDailyOutputModel>(
+                    records.GroupBy(x=>x.shiftname).SelectMany(x => x.Select(y=>new ShiftDailyOutputModel()
+                    {
+                         ShiftName = x.Key,
+                         TargetOutput = y.targetoutput,
+                         TotalOutput = x.Count(z=>z.datetimeoutput != default)
+                    })));
+                TotalOutput = ShiftTransactionRecords.Count.ToString();
+            });
+
+
+        }
         public void StartInformationSpeedService()
         {
             var cancellationToken = CancellationTokenSource.Token;
@@ -77,10 +126,45 @@ namespace VolexCarousel.ViewModels
                 }
             }, cancellationToken);
         }
-        public void StopInformationSpeedService()
+        public void StopServices()
         {
             CancellationTokenSource.Cancel();
             CancellationTokenSource = new CancellationTokenSource();
-        }   
+            _itemCheckService.Stop();
+        }
+        
+        public void StartItemCheckInputService()
+        {
+            var cancellationToken = CancellationTokenSource.Token;
+            _ = Task.Run(async () =>
+            {
+                await foreach (var record in _itemCheckService.RunCheckInput(cancellationToken))
+                {
+
+                    TimeSpan dt = (record.datetimeinput - startTime);
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        BoxByBox = dt.TotalSeconds.ToString();
+                        startTime= record.datetimeinput;
+                    });
+                }
+            }, cancellationToken);
+        }
+        public void StartItemCheckOutputService()
+        {
+            var cancellationToken = CancellationTokenSource.Token;
+            _ = Task.Run(async () =>
+            {
+                await foreach (var record in _itemCheckService.RunCheckOutput(cancellationToken))
+                {
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        await SetDataShifts(record);
+                        
+                    });
+                }
+            }, cancellationToken);
+        }
+
     }
 }

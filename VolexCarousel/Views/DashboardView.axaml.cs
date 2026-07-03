@@ -15,14 +15,14 @@ public partial class DashboardView : UserControl
     {
         if (DataContext is DashboardViewModel viewModel)
         {
-            viewModel.StartInformationSpeedService();
+            viewModel.Initialization();
         }
     }
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         if (DataContext is DashboardViewModel viewModel)
         {
-            viewModel.StopInformationSpeedService();
+            viewModel.StopServices();
         }
     }
 }

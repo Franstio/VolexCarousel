@@ -151,7 +151,7 @@
                 <StackPanel>
                     <TextBlock Text="TOTAL OUTPUT"
                                Classes="CardTitle"/>
-                    <TextBlock Text="129"
+                    <TextBlock Text="{Binding TotalOutput}"
                                Classes="BigValue"/>
                 </StackPanel>
             </Border>
@@ -161,7 +161,7 @@
                 <StackPanel>
                     <TextBlock Text="INFORMATION SPEED"
                                Classes="CardTitle"/>
-                    <TextBlock Text="0.7"
+                    <TextBlock Text="{Binding InformationSpeedData}"
                                Classes="BigValue"/>
                     <TextBlock Text="/MS"
                                Classes="ValueUnit"/>
@@ -173,7 +173,7 @@
                 <StackPanel>
                     <TextBlock Text="CT BOARD TO BOARD"
                                Classes="CardTitle"/>
-                    <TextBlock Text="12"
+                    <TextBlock Text="{Binding BoxByBox}"
                                Classes="BigValue"/>
                     <TextBlock Text="/SEC"
                                Classes="ValueUnit"/>

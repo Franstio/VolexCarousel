@@ -134,14 +134,14 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 }
             }
         }
-        public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string shift, int limit = 100)
+        public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string? shift = null, int limit = 100)
         {
             using (db)
             {
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,targetoutput from tbl_shiftrecord r where Date(r.datetimeoutput)=Date('now') and r.shiftname=@shift order by datetimeinput limit @limit", new { shift, limit });
+                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,targetoutput from tbl_shiftrecord r where Date(r.datetimeoutput)=Date('now') and (r.shiftname=@shift or shiftname is null) order by datetimeinput limit @limit", new { shift, limit });
                     return query;
                 }
                 catch (Exception e)
@@ -151,22 +151,18 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 }
             }
         }
-        public async Task<IEnumerable<ShiftRecordRowModel>> GetTodayShiftDisplay(string shift, int limit = 100)
+        public IEnumerable<ShiftRecordRowModel> GetTodayShiftDisplay(IEnumerable<ShiftTransactionRecord> shift)
         {
             try
             {
-                var query = await GetTodayShiftRecord(shift, limit);
-                using (db)
-                {
-                    db.Open();
-                    var data = query.GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).SelectMany(x => x.Select(z => new ShiftRecordRowModel()
+                    var data = shift.GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).SelectMany(x => x.Select(z => new ShiftRecordRowModel()
                     {
                         Timestamp = z.datetimeoutput,
                         TargetOutput = z.targetoutput,
                         Output = x.Count(),
                     }));
                     return data!;
-                }
+                
             }
             catch (Exception e)
             {
@@ -181,13 +177,13 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select r.shiftname,datetimeinput,datetimeoutput,targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DAte(r.datetimeoutput)=DATE('now') and r.shiftname=@shift");
+                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DAte(r.datetimeoutput)=DATE('now')");
                     var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
                     {
                         ShiftName = x.Key,
                         TargetOutput = z.targetoutput,
-                        TotalOutput = x.Count()
-                    }));
+                        TotalOutput = x.Count(x => x.datetimeoutput != default),
+                    })); ;
                     return data!;
                 }
                 catch (Exception e)

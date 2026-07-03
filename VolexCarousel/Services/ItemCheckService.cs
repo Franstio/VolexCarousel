@@ -52,9 +52,16 @@ namespace VolexCarousel.Services
                 if (await CheckItemInput())
                 {
                     if (ShiftTransactionRecord.Any() && ShiftTransactionRecord.Peek().uid == uid) continue;
+
+                    var shifts = await carouselRepositoryService.GetShift();
+                    if (shifts is null || !shifts.Any()) continue;
+                    var shift = shifts.Where(x => x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay).FirstOrDefault();
+                    if (shift is null) continue;
                     ShiftTransactionRecord.Enqueue(new Models.ShiftTransactionRecord()
                     {
+                        shiftname = shift.shiftname,
                         uid = uid,
+                        targetoutput = shift.targetoutput,
                         datetimeinput = DateTime.Now,
                     });
                     yield return ShiftTransactionRecord.Peek();
@@ -62,6 +69,10 @@ namespace VolexCarousel.Services
                 else
                     uid = Guid.NewGuid();
             }
+        }
+        public void Stop()
+        {
+            _plcService.Stop();
         }
 
         public async IAsyncEnumerable<ShiftTransactionRecord> RunCheckOutput([EnumeratorCancellation] CancellationToken cancelTokenSource = default)
@@ -73,14 +84,8 @@ namespace VolexCarousel.Services
                 if (await CheckItemOutput())
                 {
                     if (!ShiftTransactionRecord.Any()) continue;
-
-                    var shifts = await carouselRepositoryService.GetShift();
-                    var shift = shifts.Where(x => x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay).FirstOrDefault();
-
-                    if (shift is null) continue;
                     var item = ShiftTransactionRecord.Dequeue();
-                    item.shiftname = shift.shiftname;
-                    item.targetoutput = shift.targetoutput;
+
                     item.datetimeoutput = DateTime.Now;
                     yield return item;
                 }
