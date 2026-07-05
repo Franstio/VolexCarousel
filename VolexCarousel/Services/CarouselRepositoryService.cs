@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput) values(@shiftname,@datetimeinput,@datetimeoutput);", record);
+                    await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput,targetoutput) values(@shiftname,@datetimeinput,@datetimeoutput,@targetoutput);", record);
                     tr.Commit();
                 }
                 catch (Exception e)
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,targetoutput from tbl_shiftrecord r where Date(r.datetimeoutput)=Date('now') and (r.shiftname=@shift or shiftname is null) order by datetimeinput limit @limit", new { shift, limit });
+                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Date(r.datetimeoutput)=Date('now') and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift, limit });
                     return query;
                 }
                 catch (Exception e)
@@ -157,10 +157,10 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             {
                     var data = shift.GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).SelectMany(x => x.Select(z => new ShiftRecordRowModel()
                     {
-                        Timestamp = z.datetimeoutput,
+                        Timestamp = DateTime.Today.AddHours(x.Key.hour),
                         TargetOutput = z.targetoutput,
                         Output = x.Count(),
-                    }));
+                    })).DistinctBy(x=>x.Timestamp);
                     return data!;
                 
             }
@@ -177,13 +177,13 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DAte(r.datetimeoutput)=DATE('now')");
+                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATE(r.datetimeoutput)=DATE('now')");
                     var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
                     {
                         ShiftName = x.Key,
                         TargetOutput = z.targetoutput,
                         TotalOutput = x.Count(x => x.datetimeoutput != default),
-                    })); ;
+                    })).DistinctBy(x=>x.ShiftName) ;
                     return data!;
                 }
                 catch (Exception e)

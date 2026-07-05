@@ -29,6 +29,7 @@ namespace VolexCarousel.Services
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                await Task.Delay(10);
                 if (!IsConnected)
                 {
                     try

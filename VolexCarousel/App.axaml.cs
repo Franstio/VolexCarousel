@@ -54,7 +54,7 @@ namespace VolexCarousel
 
             services.AddLogging(l =>
             {
-                l.AddSerilog(new LoggerConfiguration()
+                l.AddSerilog(new LoggerConfiguration().Enrich.FromLogContext()
                     .WriteTo.SQLite(Path.Combine(AppContext.BaseDirectory, "logs.db"),"tbl_log",restrictedToMinimumLevel:LogEventLevel.Debug,rollOver:true)
                     .CreateLogger());
             });

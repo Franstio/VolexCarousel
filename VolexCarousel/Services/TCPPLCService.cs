@@ -16,6 +16,7 @@ namespace VolexCarousel.Services
     {
         private readonly ILogger<TCPPLCService> _logger;
         private readonly AppSettingService _appSettingService;
+        private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         public TCPPLCService(ILogger<TCPPLCService> logger, AppSettingService appSettingService,ILogger<TcpService> tcpLogger) : base(tcpLogger)
         {
             _logger = logger;
@@ -25,6 +26,7 @@ namespace VolexCarousel.Services
         {
             try
             {
+                semaphoreSlim.Wait();
                 if (IsConnected)
                     return;
                 IPEndPoint endpoint = IPEndPoint.Parse(_appSettingService.LoadSettings().PLCPort);
@@ -34,6 +36,10 @@ namespace VolexCarousel.Services
             catch (Exception e)
             {
                 _logger.LogError(e.Message + " | " + e.StackTrace);
+            }
+            finally
+            {
+                semaphoreSlim.Release();
             }
         }
 

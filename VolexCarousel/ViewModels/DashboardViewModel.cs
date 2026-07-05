@@ -38,7 +38,7 @@ namespace VolexCarousel.ViewModels
 
         private AppSettingService AppSettingService;
         private List<ShiftTransactionRecord> ShiftTransactionRecords = [];
-        private DateTime startTime = DateTime.Now;
+        private TimeSpan startTime = TimeSpan.Zero;
         private readonly InformationSpeedService _informationSpeedService;
         private readonly ItemCheckService _itemCheckService;
         private readonly CarouselRepositoryService _carouselRepositoryService;
@@ -79,34 +79,50 @@ namespace VolexCarousel.ViewModels
                  _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Noon")));
                 MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(
                  _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Night")));
+
+                TotalOutput = (await _carouselRepositoryService.GetTodayShiftRecord()).Count().ToString();
             });
         }
         private async Task SetDataShifts(ShiftTransactionRecord record)
         {
+            var rows = await _carouselRepositoryService.GetShift();
             ShiftTransactionRecords.Add(record);
+
             var records = ShiftTransactionRecords.Where(x => x.shiftname == record.shiftname).OrderBy(x => x.datetimeinput);
+            var joinData = rows.GroupJoin(records, x => x.shiftname, z => z.shiftname, (x, y) => new { x, y }
+                    ).SelectMany((x) => x.y.DefaultIfEmpty(), (x, y) =>
+                    new ShiftTransactionRecord()
+                    {
+                        uid = y?.uid ?? Guid.Empty,
+                        datetimeinput = y?.datetimeinput ?? default,
+                        datetimeoutput = y?.datetimeoutput ?? default,
+                        targetoutput = x.x.targetoutput,
+                        shiftname = x.x.shiftname
+                    });
+
             if (record.shiftname == "Day")
             {
-                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(records));
+                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
                 
             }
             else if (record.shiftname == "Noon")
             {
-                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(records));
+                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
             }
             else if (record.shiftname == "Night")
             {
-                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(records));
+                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
             }
             Dispatcher.UIThread.Invoke(() =>
             {
+               
                 ShiftRows = new ObservableCollection<ShiftDailyOutputModel>(
-                    records.GroupBy(x=>x.shiftname).SelectMany(x => x.Select(y=>new ShiftDailyOutputModel()
+                    joinData.GroupBy(x=>x.shiftname).SelectMany(x => x.Select(y=>new ShiftDailyOutputModel()
                     {
                          ShiftName = x.Key,
                          TargetOutput = y.targetoutput,
                          TotalOutput = x.Count(z=>z.datetimeoutput != default)
-                    })));
+                    })).DistinctBy(x=>x.ShiftName) );
                 TotalOutput = ShiftTransactionRecords.Count.ToString();
             });
 
@@ -140,12 +156,11 @@ namespace VolexCarousel.ViewModels
             {
                 await foreach (var record in _itemCheckService.RunCheckInput(cancellationToken))
                 {
-
-                    TimeSpan dt = (record.datetimeinput - startTime);
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    TimeSpan dt = (DateTime.Now.TimeOfDay - startTime);
+                    startTime = DateTime.Now.TimeOfDay;
+                    Dispatcher.UIThread.Invoke(() =>
                     {
-                        BoxByBox = dt.TotalSeconds.ToString();
-                        startTime= record.datetimeinput;
+                        BoxByBox = dt.TotalSeconds.ToString("0.0");
                     });
                 }
             }, cancellationToken);
@@ -160,7 +175,7 @@ namespace VolexCarousel.ViewModels
                     await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         await SetDataShifts(record);
-                        
+                        await _carouselRepositoryService.RecordItemInput(record);
                     });
                 }
             }, cancellationToken);

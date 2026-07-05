@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,11 @@ namespace VolexCarousel.Services
 {
     public class ItemCheckService
     {
-        private Guid uid = Guid.NewGuid();
+        private Guid uid = Guid.NewGuid(),ouid=Guid.NewGuid(),ouidcheck=Guid.NewGuid();
         private readonly ICheckItemService _plcService;
         private readonly ILogger<ItemCheckService> _logger;
-        private readonly string INPUT_ADDRESS = "";
-        private readonly string OUTPUT_ADDRESS = "";
+        private readonly string INPUT_ADDRESS = "MR001";
+        private readonly string OUTPUT_ADDRESS = "MR002";
         private DateTime _boxByBoxRecord = DateTime.Now;
         private Queue<ShiftTransactionRecord> ShiftTransactionRecord = [];
         private readonly CarouselRepositoryService carouselRepositoryService;
@@ -34,13 +35,13 @@ namespace VolexCarousel.Services
         public async Task<bool> CheckItemInput()
         {
             var data = await _plcService.CheckItemAsync(INPUT_ADDRESS);
-            return !string.IsNullOrEmpty(data) ? data == "OK" : false;
+            return !string.IsNullOrEmpty(data) ? data == "OK" || data == "1" : false;
         }
 
         public async Task<bool> CheckItemOutput()
         {
             var data = await _plcService.CheckItemAsync(OUTPUT_ADDRESS);
-            return !string.IsNullOrEmpty(data) ? data == "OK" : false;
+            return !string.IsNullOrEmpty(data) ? data == "OK" || data == "1" : false;
         }
 
         public async IAsyncEnumerable<ShiftTransactionRecord> RunCheckInput([EnumeratorCancellation] CancellationToken cancelTokenSource=default)
@@ -48,26 +49,37 @@ namespace VolexCarousel.Services
             _plcService.Start();
             while (!cancelTokenSource.IsCancellationRequested)
             {
-                await Task.Delay(100);
-                if (await CheckItemInput())
+                ShiftTransactionRecord? record = null;
+                await Task.Delay(50);
+                try
                 {
-                    if (ShiftTransactionRecord.Any() && ShiftTransactionRecord.Peek().uid == uid) continue;
 
-                    var shifts = await carouselRepositoryService.GetShift();
-                    if (shifts is null || !shifts.Any()) continue;
-                    var shift = shifts.Where(x => x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay).FirstOrDefault();
-                    if (shift is null) continue;
-                    ShiftTransactionRecord.Enqueue(new Models.ShiftTransactionRecord()
+                    if (await CheckItemInput())
                     {
-                        shiftname = shift.shiftname,
-                        uid = uid,
-                        targetoutput = shift.targetoutput,
-                        datetimeinput = DateTime.Now,
-                    });
-                    yield return ShiftTransactionRecord.Peek();
+                        if (ShiftTransactionRecord.Any() && ShiftTransactionRecord.Peek().uid == uid) continue;
+
+                        var shifts = await carouselRepositoryService.GetShift();
+                        if (shifts is null || !shifts.Any()) continue;
+                        var shift = shifts.Where(x => x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay).FirstOrDefault();
+                        if (shift is null) continue;
+                        ShiftTransactionRecord.Enqueue(new Models.ShiftTransactionRecord()
+                        {
+                            shiftname = shift.shiftname,
+                            uid = uid,
+                            targetoutput = shift.targetoutput,
+                            datetimeinput = DateTime.Now,
+                        });
+                        record = ShiftTransactionRecord.Peek();
+                    }
+                    else
+                        uid = Guid.NewGuid();
                 }
-                else
-                    uid = Guid.NewGuid();
+                catch (Exception e)
+                {
+                    _logger.LogError(e.Message + " | " + e.StackTrace);
+                }
+                if (record is not null)
+                    yield return ShiftTransactionRecord.Peek();
             }
         }
         public void Stop()
@@ -80,15 +92,29 @@ namespace VolexCarousel.Services
             _plcService.Start();
             while (!cancelTokenSource.IsCancellationRequested)
             {
-                await Task.Delay(100);
-                if (await CheckItemOutput())
+                await Task.Delay(50);
+                ShiftTransactionRecord? item = null;
+                try
                 {
-                    if (!ShiftTransactionRecord.Any()) continue;
-                    var item = ShiftTransactionRecord.Dequeue();
+                    if (await CheckItemOutput())
+                    {
+                        if (ouid == ouidcheck) continue;
 
-                    item.datetimeoutput = DateTime.Now;
-                    yield return item;
+                        ouidcheck = ouid;
+                        if (!ShiftTransactionRecord.Any()) continue;
+                        item = ShiftTransactionRecord.Dequeue();
+
+                        item.datetimeoutput = DateTime.Now;
+                    }
+                    else
+                        ouid = Guid.NewGuid();
                 }
+                catch(Exception e)
+                {
+                    _logger.LogError(e.Message + " | " + e.StackTrace);
+                }
+                if (item is not null)
+                    yield return item;
             }
         }
 
