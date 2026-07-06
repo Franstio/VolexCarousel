@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              Background="#132868"
-             Width="900" Height="450"
+             Width="900" Height="650"
              xmlns:vm="using:VolexCarousel.ViewModels"
              x:DataType="vm:ShiftSettingViewModel"
              x:Class="VolexCarousel.Views.ShiftSettingView">
@@ -17,7 +17,7 @@
                  Margin="10"
                  >
                    <TabControl Margin="5">
-    <TabItem Header="Shift Time Setting">
+    <TabItem Header="Shift Time Setting" Foreground="White">
        <StackPanel Spacing="15">
                 
                             <TextBlock 
@@ -80,18 +80,18 @@
                                 </StackPanel>
                                 </Grid>
                         
-                        <Button Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10"  Foreground="White" Command="{Binding SetAllShiftCommand}" >Save</Button>
+                        <Button Foreground="White" Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10"  Command="{Binding SetAllShiftCommand}" >Save</Button>
                         </StackPanel>
 
     </TabItem>
-    <TabItem Header="Application Setting">
+    <TabItem Header="Application Setting" Foreground="White">
                             <StackPanel Spacing="35" Grid.Row="1">
                             <TextBlock 
                             HorizontalAlignment="Center"
                             Foreground="White"
                             FontSize="48"
                             Text="Application Setting"/>
-                            <Grid RowDefinitions="Auto,Auto" RowSpacing="30" ColumnDefinitions="35*,65*" ColumnSpacing="30">
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="30" ColumnDefinitions="35*,65*" ColumnSpacing="30">
                                 <TextBlock 
                                 Grid.Row="0"
                                 Grid.Column="0"
@@ -112,10 +112,21 @@
                                 FontSize="32"
                                 />
                                 <NumericUpDown Value="{Binding TargetOutputShift}" Grid.Column="1" Grid.Row="1" FontSize="32"/>
+                                <TextBox Text="{Binding Title}" Grid.Column="1" FontSize="32"/>
+                                <TextBlock 
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Foreground="White"
+                                Text="Speed:"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch"
+                                FontSize="32"
+                                />
+                                <NumericUpDown Value="{Binding SpeedInput}" Grid.Column="1" Grid.Row="2" FontSize="32"/>
                                 
                             </Grid>
                             
-                        <Button Command="{Binding SetAppinfoCommand}" Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Foreground="White">Save</Button>
+                        <Button Foreground="White" Command="{Binding SetAppinfoCommand}" Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" >Save</Button>
                           </StackPanel>
     </TabItem>
   </TabControl>

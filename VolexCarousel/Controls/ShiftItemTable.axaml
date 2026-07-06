@@ -126,7 +126,7 @@
     <Setter Property="Template">
       <ControlTemplate>
                   <Border Classes="PanelCard" >
-                <Grid RowDefinitions="10*,90*">
+                <Grid RowDefinitions="15*,85*">
 
                     <TextBlock Text="{TemplateBinding Title}"
                                Classes="PanelHeader"

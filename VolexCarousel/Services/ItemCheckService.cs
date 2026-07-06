@@ -100,10 +100,10 @@ namespace VolexCarousel.Services
                     {
                         if (ouid == ouidcheck) continue;
 
-                        ouidcheck = ouid;
                         if (!ShiftTransactionRecord.Any()) continue;
                         item = ShiftTransactionRecord.Dequeue();
 
+                        ouidcheck = ouid;
                         item.datetimeoutput = DateTime.Now;
                     }
                     else

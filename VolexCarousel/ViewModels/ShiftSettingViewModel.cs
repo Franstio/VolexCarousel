@@ -35,6 +35,8 @@ namespace VolexCarousel.ViewModels
 
         [ObservableProperty]
         public int targetOutputShift = 0;
+        [ObservableProperty]
+        public int speedInput = 0;
 
         public ShiftSettingViewModel(AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService)
         {
