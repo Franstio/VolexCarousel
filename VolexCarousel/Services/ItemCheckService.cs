@@ -60,7 +60,13 @@ namespace VolexCarousel.Services
 
                         var shifts = await carouselRepositoryService.GetShift();
                         if (shifts is null || !shifts.Any()) continue;
-                        var shift = shifts.Where(x => x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay).FirstOrDefault();
+                        var shift = shifts.
+                            Where(x => {
+                                if (x.shiftstart < x.shiftend)
+                                    return x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay;
+                                else
+                                    return x.shiftstart <= DateTime.Now.TimeOfDay || x.shiftend >= DateTime.Now.TimeOfDay;
+                            }).FirstOrDefault();
                         if (shift is null) continue;
                         ShiftTransactionRecord.Enqueue(new Models.ShiftTransactionRecord()
                         {
