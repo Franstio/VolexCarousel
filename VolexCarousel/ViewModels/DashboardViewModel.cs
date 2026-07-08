@@ -41,7 +41,7 @@ namespace VolexCarousel.ViewModels
 
         private AppSettingService AppSettingService;
         private List<ShiftTransactionRecord> ShiftTransactionRecords = [];
-        private TimeSpan startTime = TimeSpan.Zero;
+        private DateTime startTime = DateTime.Now,endTime = DateTime.Now;
         private readonly InformationSpeedService _informationSpeedService;
         private readonly ItemCheckService _itemCheckService;
         private readonly CarouselRepositoryService _carouselRepositoryService;
@@ -63,7 +63,12 @@ namespace VolexCarousel.ViewModels
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
-            timerDate.Tick += (o, e) => Time = DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss");
+            timerDate.Tick += (o, e) => {
+                Time = DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss");
+
+                TimeSpan dt = endTime > startTime ? (endTime - startTime) : startTime - endTime;
+                BoxByBox = dt.TotalSeconds.ToString("0.0");
+            };
 
         }
         public async void Initialization()
@@ -84,11 +89,11 @@ namespace VolexCarousel.ViewModels
                 ShiftRows = new ObservableCollection<ShiftDailyOutputModel>(await _carouselRepositoryService.GetDailyOutput());
                 ShiftTransactionRecords.AddRange(await _carouselRepositoryService.GetTodayShiftRecord());
                 PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(
-                 _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Day")));
+                 await _carouselRepositoryService.GetTodayShiftDisplay("Day",await _carouselRepositoryService.GetTodayShiftRecord("Day")));
                 SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(
-                 _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Noon")));
+                 await _carouselRepositoryService.GetTodayShiftDisplay("Noon",await _carouselRepositoryService.GetTodayShiftRecord("Noon")));
                 MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(
-                 _carouselRepositoryService.GetTodayShiftDisplay(await _carouselRepositoryService.GetTodayShiftRecord("Night")));
+                 await _carouselRepositoryService.GetTodayShiftDisplay("Night",await _carouselRepositoryService.GetTodayShiftRecord("Night")));
 
                 TotalOutput = (await _carouselRepositoryService.GetTodayShiftRecord()).Count().ToString();
             });
@@ -112,16 +117,16 @@ namespace VolexCarousel.ViewModels
 
             if (record.shiftname == "Day")
             {
-                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
+                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay(record.shiftname,records));
 
             }
             else if (record.shiftname == "Noon")
             {
-                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
+                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay(record.shiftname,records));
             }
             else if (record.shiftname == "Night")
             {
-                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
+                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay(record.shiftname, records));
             }
             Dispatcher.UIThread.Invoke(() =>
             {
@@ -167,12 +172,11 @@ namespace VolexCarousel.ViewModels
             {
                 await foreach (var record in _itemCheckService.RunCheckInput(cancellationToken))
                 {
-                    TimeSpan dt = (DateTime.Now.TimeOfDay - startTime);
-                    startTime = DateTime.Now.TimeOfDay;
-                    Dispatcher.UIThread.Invoke(() =>
+                    if (endTime != record.datetimeinput)
                     {
-                        BoxByBox = dt.TotalSeconds.ToString("0.0");
-                    });
+                        startTime = endTime;
+                        endTime = record.datetimeinput;
+                    }
                 }
             }, cancellationToken);
         }

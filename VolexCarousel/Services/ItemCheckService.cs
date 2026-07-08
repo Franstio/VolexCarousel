@@ -56,7 +56,7 @@ namespace VolexCarousel.Services
 
                     if (await CheckItemInput())
                     {
-                        if (ShiftTransactionRecord.Any() && ShiftTransactionRecord.Peek().uid == uid) continue;
+                        if (ShiftTransactionRecord.Any() && ShiftTransactionRecord.LastOrDefault()?.uid == uid) continue;
 
                         var shifts = await carouselRepositoryService.GetShift();
                         if (shifts is null || !shifts.Any()) continue;
@@ -68,14 +68,14 @@ namespace VolexCarousel.Services
                                     return x.shiftstart <= DateTime.Now.TimeOfDay || x.shiftend >= DateTime.Now.TimeOfDay;
                             }).FirstOrDefault();
                         if (shift is null) continue;
-                        ShiftTransactionRecord.Enqueue(new Models.ShiftTransactionRecord()
+                        record = new Models.ShiftTransactionRecord()
                         {
                             shiftname = shift.shiftname,
                             uid = uid,
                             targetoutput = shift.targetoutput,
                             datetimeinput = DateTime.Now,
-                        });
-                        record = ShiftTransactionRecord.Peek();
+                        };
+                        ShiftTransactionRecord.Enqueue(record);
                     }
                     else
                         uid = Guid.NewGuid();
@@ -85,8 +85,8 @@ namespace VolexCarousel.Services
                     _logger.LogError(e.Message + " | " + e.StackTrace);
                 }
                 if (record is not null)
-                    yield return ShiftTransactionRecord.Peek();
-            }
+                    yield return record;
+                }
         }
         public void Stop()
         {

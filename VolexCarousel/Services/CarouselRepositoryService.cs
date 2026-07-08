@@ -134,14 +134,15 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 }
             }
         }
-        public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string? shift = null, int limit = 100)
+        public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string? shift = null, int limit = 10000)
         {
             using (db)
             {
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Date(r.datetimeoutput)=Date('now') and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift, limit });
+                    (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
+                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Datetime(r.datetimeoutput) between DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam) and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift,prevLimitParam,nextLimitParam, limit });
                     return query;
                 }
                 catch (Exception e)
@@ -155,6 +156,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
         {
             try
             {
+                    
                     var data = shift.GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).SelectMany(x => x.Select(z => new ShiftRecordRowModel()
                     {
                         Timestamp = DateTime.Today.AddHours(x.Key.hour),
@@ -170,6 +172,58 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 return [];
             }
         }
+        public async Task<IEnumerable<ShiftRecordRowModel>> GetTodayShiftDisplay(string shiftName,IEnumerable<ShiftTransactionRecord> shift)
+        {
+            try
+            {
+                var shiftData = (await GetShift(shiftName)).First();
+                var interval = (shiftData.shiftstart > shiftData.shiftend ? shiftData.shiftstart - shiftData.shiftend : shiftData.shiftend - shiftData.shiftstart).TotalHours;
+                var empty = Enumerable.Range(0, Convert.ToInt32(interval)).Select(x=>new
+                {
+                    shiftname = shiftData.shiftname,
+                    hour = shiftData.shiftstart.Add(TimeSpan.FromHours(x)).Hours
+                });
+
+                var data = shift.GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).Select(x => new
+                {
+                    totalOutput = x.Count(),
+                    shiftName = x.Key.shiftname,
+                    hour  = x.Key.hour
+                });
+                return empty.GroupJoin(data, x => x.hour, y => y.hour, (x, y) => new { x, y }).SelectMany(x => x.y.DefaultIfEmpty(), (x, y) =>
+                {
+                    return new ShiftRecordRowModel()
+                    {
+                        Output = y?.totalOutput ?? 0,
+                        TargetOutput = shiftData.targetoutput,
+                        Timestamp = DateTime.Today.AddHours(x.x.hour)
+                    };
+                });
+                //var ret = data.SelectMany(x => x.Select(z => new ShiftRecordRowModel()
+                //{
+                //    Timestamp = DateTime.Today.AddHours(x.Key.hour),
+                //    TargetOutput = z.targetoutput,
+                //    Output = x.Count(),
+                //})).DistinctBy(x => x.Timestamp);
+                //return ret!;
+
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                return [];
+            }
+        }
+        (string prev,string next) GetDayLimit(ShiftMasterRecord day)
+        {
+            var now = DateTime.Now;
+
+            var dayShiftStart = day.shiftstart;
+            var nextLimit = DateTime.Today.Add(dayShiftStart);
+            string nextLimitParam = (now < nextLimit ? nextLimit : nextLimit.AddDays(1)).ToString("yyyy-MM-dd HH:mm:ss");
+            string prevLimitParam = (now > nextLimit ? nextLimit : nextLimit.AddDays(-1)).ToString("yyyy-MM-dd HH:mm:ss");
+            return (prevLimitParam, nextLimitParam);
+        }
         public async Task<IEnumerable<ShiftDailyOutputModel>> GetDailyOutput()
         {
             using (db)
@@ -177,7 +231,8 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATE(r.datetimeoutput)=DATE('now')");
+                    (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
+                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATETIME(r.datetimeoutput) BETWEEN DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam)", new {prevLimitParam,nextLimitParam});
                     var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
                     {
                         ShiftName = x.Key,
