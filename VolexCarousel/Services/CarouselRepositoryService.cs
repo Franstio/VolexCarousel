@@ -177,8 +177,8 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             try
             {
                 var shiftData = (await GetShift(shiftName)).First();
-                var interval = (shiftData.shiftstart > shiftData.shiftend ? shiftData.shiftstart - shiftData.shiftend : shiftData.shiftend - shiftData.shiftstart).TotalHours;
-                var empty = Enumerable.Range(0, Convert.ToInt32(interval)).Select(x=>new
+                var interval = (shiftData.shiftstart > shiftData.shiftend ? shiftData.shiftend.Add(TimeSpan.FromDays(1)) - shiftData.shiftstart : shiftData.shiftend - shiftData.shiftstart).TotalHours;
+                var empty = Enumerable.Range(0, Convert.ToInt32(interval+1)).Select(x=>new
                 {
                     shiftname = shiftData.shiftname,
                     hour = shiftData.shiftstart.Add(TimeSpan.FromHours(x)).Hours

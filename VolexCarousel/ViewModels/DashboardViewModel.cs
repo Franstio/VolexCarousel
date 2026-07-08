@@ -101,7 +101,9 @@ namespace VolexCarousel.ViewModels
         private async Task SetDataShifts(ShiftTransactionRecord record)
         {
             var rows = await _carouselRepositoryService.GetShift();
-            ShiftTransactionRecords.Add(record);
+            ShiftTransactionRecords.Clear();
+            ShiftTransactionRecords.AddRange(await _carouselRepositoryService.GetTodayShiftRecord());
+            //            ShiftTransactionRecords.Add(record);
 
             var records = ShiftTransactionRecords.Where(x => x.shiftname == record.shiftname).OrderBy(x => x.datetimeinput);
             var joinData = rows.GroupJoin(records, x => x.shiftname, z => z.shiftname, (x, y) => new { x, y }
@@ -189,8 +191,8 @@ namespace VolexCarousel.ViewModels
                 {
                     await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
-                        await SetDataShifts(record);
                         await _carouselRepositoryService.RecordItemInput(record);
+                        await SetDataShifts(record);
                     });
                 }
             }, cancellationToken);
