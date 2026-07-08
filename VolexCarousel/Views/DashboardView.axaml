@@ -186,7 +186,7 @@
                         <Grid 
                               RowDefinitions="15*,5*,80*">
                     <Border BorderThickness="2" BorderBrush="AntiqueWhite" Padding="10" CornerRadius="10">
-                   <TextBlock HorizontalAlignment="Center" Text="13 December 2025   22:12:11 WIB"
+                   <TextBlock HorizontalAlignment="Center" Text="{Binding Time}"
                                Foreground="White"
                                FontWeight="SemiBold"/>
                     </Border>

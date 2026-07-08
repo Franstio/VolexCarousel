@@ -23,7 +23,7 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty] ObservableCollection<ShiftRecordRowModel> malamShiftRows = new ObservableCollection<ShiftRecordRowModel>();
 
         [ObservableProperty] ObservableCollection<ShiftDailyOutputModel> shiftRows = new ObservableCollection<ShiftDailyOutputModel>();
-        
+
 
         [ObservableProperty]
         string title = "CAROUSEL MACHINE INFORMATION";
@@ -36,12 +36,16 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty]
         string totalOutput = "0";
 
+        [ObservableProperty]
+        string time = DateTime.Now.ToString("dd MMMM yyyy HH:mm:dd");
+
         private AppSettingService AppSettingService;
         private List<ShiftTransactionRecord> ShiftTransactionRecords = [];
         private TimeSpan startTime = TimeSpan.Zero;
         private readonly InformationSpeedService _informationSpeedService;
         private readonly ItemCheckService _itemCheckService;
         private readonly CarouselRepositoryService _carouselRepositoryService;
+        private DispatcherTimer timerDate;
 
         private static CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
         public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, ItemCheckService itemCheckService, CarouselRepositoryService carouselRepositoryService)
@@ -55,10 +59,16 @@ namespace VolexCarousel.ViewModels
             {
                 Title = appSettingService.LoadSettings().Title;
             }
+            timerDate = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            timerDate.Tick += (o, e) => Time = DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss");
 
         }
         public async void Initialization()
         {
+            timerDate.Start();
             await LoadInitData();
             StartItemCheckInputService();
             StartItemCheckOutputService();
@@ -103,7 +113,7 @@ namespace VolexCarousel.ViewModels
             if (record.shiftname == "Day")
             {
                 PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(_carouselRepositoryService.GetTodayShiftDisplay(joinData));
-                
+
             }
             else if (record.shiftname == "Noon")
             {
@@ -115,14 +125,14 @@ namespace VolexCarousel.ViewModels
             }
             Dispatcher.UIThread.Invoke(() =>
             {
-               
+
                 ShiftRows = new ObservableCollection<ShiftDailyOutputModel>(
-                    joinData.GroupBy(x=>x.shiftname).SelectMany(x => x.Select(y=>new ShiftDailyOutputModel()
+                    joinData.GroupBy(x => x.shiftname).SelectMany(x => x.Select(y => new ShiftDailyOutputModel()
                     {
-                         ShiftName = x.Key,
-                         TargetOutput = y.targetoutput,
-                         TotalOutput = x.Count(z=>z.datetimeoutput != default)
-                    })).DistinctBy(x=>x.ShiftName) );
+                        ShiftName = x.Key,
+                        TargetOutput = y.targetoutput,
+                        TotalOutput = x.Count(z => z.datetimeoutput != default)
+                    })).DistinctBy(x => x.ShiftName));
                 TotalOutput = ShiftTransactionRecords.Count.ToString();
             });
 
@@ -144,11 +154,12 @@ namespace VolexCarousel.ViewModels
         }
         public void StopServices()
         {
+            timerDate.Stop();
             CancellationTokenSource.Cancel();
             CancellationTokenSource = new CancellationTokenSource();
             _itemCheckService.Stop();
         }
-        
+
         public void StartItemCheckInputService()
         {
             var cancellationToken = CancellationTokenSource.Token;
