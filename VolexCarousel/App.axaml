@@ -10,6 +10,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://VolexCarousel/Controls/ShiftItemTable.axaml"/>
                 <ResourceInclude Source="avares://VolexCarousel/Controls/ShiftTable.axaml"/>
+                <ResourceInclude Source="avares://VolexCarousel/Controls/LogTemplateControl.axaml"/>
+
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

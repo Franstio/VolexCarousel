@@ -22,6 +22,7 @@ namespace VolexCarousel.Services
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         public bool IsConnected => _tcpClient.Connected;
         private IPEndPoint? _endpoint = null;
+        public event Action<string>? OnResponse;
         public TcpService(ILogger<TcpService> logger)
         {
             _logger = logger;
@@ -47,9 +48,11 @@ namespace VolexCarousel.Services
                 _networkStream.ReadTimeout = 3000;
                 _networkStream.WriteTimeout = 3000;
                 _logger.LogInformation($"Connected to Information Speed at {endpoint.Address}:{endpoint.Port}");
+                OnResponse?.Invoke("Connected");
             }
             catch (Exception ex)
             {
+                OnResponse?.Invoke("Error: "+ex.Message);
                 _logger.LogError(ex, "Failed to connect to Information Speed");
                 throw;
             }
@@ -63,9 +66,13 @@ namespace VolexCarousel.Services
                     return;
                 _tcpClient.Close();
                 _logger.LogInformation("Disconnected from Information Speed");
+                OnResponse?.Invoke("Closing tcp");
+
             }
             catch (Exception ex)
             {
+                OnResponse?.Invoke("Error closing");
+
                 _logger.LogError(ex, "Failed to disconnect from Information Speed");
                 throw;
             }
@@ -89,11 +96,15 @@ namespace VolexCarousel.Services
                 byte[] buffer = new byte[1024];
                 var data = await _networkStream.ReadAsync(buffer, 0, buffer.Length,source.Token);
                 semaphore.Release();
-                return Encoding.ASCII.GetString(buffer, 0, data).Trim();
+                var res = Encoding.ASCII.GetString(buffer, 0, data).Trim();
+                OnResponse?.Invoke(res);
+                return res;
             }
             catch (Exception e)
             {
                 semaphore.Release();
+                OnResponse?.Invoke("Error Reading: "+e.Message );
+
                 _logger.LogError(e.Message + " | " + e.StackTrace);
                 throw;
             }
@@ -114,10 +125,13 @@ namespace VolexCarousel.Services
                 byte[] buffer = Encoding.ASCII.GetBytes(message);
                 await _networkStream.WriteAsync(buffer, 0, buffer.Length);
                 semaphore.Release();
+                OnResponse?.Invoke("Sucess write: " + message);
             }
             catch (Exception e)
             {
                 semaphore.Release();
+                OnResponse?.Invoke("Error Write: "+e.Message);
+
                 _logger.LogError(e.Message + " | " + e.StackTrace);
                 throw;
             }

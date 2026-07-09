@@ -5,6 +5,7 @@
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              Background="#132868"
              Width="900" Height="650"
+             xmlns:controls="using:VolexCarousel.Controls"
              xmlns:vm="using:VolexCarousel.ViewModels"
              x:DataType="vm:ShiftSettingViewModel"
              x:Class="VolexCarousel.Views.ShiftSettingView">
@@ -129,6 +130,15 @@
                         <Button Foreground="White" Command="{Binding SetAppinfoCommand}" Background="#17367F" FontSize="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" >Save</Button>
                           </StackPanel>
     </TabItem>
+                       <TabItem Header="Debug TCP PLC" Foreground="White">
+                           <Grid RowDefinitions="10*,90*" RowSpacing="5">
+                               <StackPanel Spacing="10" Orientation="Horizontal">
+                                   <Button Foreground="White" Command="{Binding ClearLogCommand}">Clear</Button>
+                                   <Button Foreground="White" Content="{Binding LogState}" Command="{Binding ToggleLogStateCommand}"/>
+                               </StackPanel>
+                           <controls:LogTemplateControl Grid.Row="1" Logs="{Binding Logs}" />
+                           </Grid>
+                       </TabItem>
   </TabControl>
 
                  </Border>

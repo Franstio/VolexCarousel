@@ -1,11 +1,14 @@
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using VolexCarousel.Models;
 using VolexCarousel.Services;
 
 namespace VolexCarousel.ViewModels
@@ -34,15 +37,58 @@ namespace VolexCarousel.ViewModels
         public TimeSpan? nightShiftTimeEnd = TimeSpan.FromHours(1);
 
         [ObservableProperty]
+        public ObservableCollection<LogModel> logs = new ObservableCollection<LogModel>();
+
+        [ObservableProperty]
         public int targetOutputShift = 0;
         [ObservableProperty]
         public int speedInput = 0;
 
-        public ShiftSettingViewModel(AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService)
+        [ObservableProperty]
+        public string logState = "Pause";
+
+        private readonly TCPPLCService tcpPLCService;
+
+        public ShiftSettingViewModel(AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService, TCPPLCService tcpPLCService)
         {
             AppSettingService = appSettingService;
             CarouselRepositoryService = carouselRepositoryService;
             appSettingService.LoadSettings();
+            this.tcpPLCService = tcpPLCService;
+        }
+        public void Init()
+        {
+            this.tcpPLCService.OnResponse += acceptLog;
+        }
+        public void Close()
+        {
+            this.tcpPLCService.OnResponse -= acceptLog;
+        }
+        private void acceptLog(string log)
+        {
+            Dispatcher.UIThread.Invoke(()=>
+            Logs.Add(new LogModel()
+            {
+                log=log,
+                time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            }));
+        }
+        [RelayCommand]
+        public void ClearLog() => Logs.Clear();
+
+        [RelayCommand]
+        public void ToggleLogState()
+        {
+            if (LogState == "Pause")
+            {
+                Close();
+                LogState = "Resume";
+            }
+            else if (LogState == "Resume")
+            {
+                Init();
+                LogState = "Pause";
+            }
         }
         public async Task LoadSettings()
         {

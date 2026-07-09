@@ -13,6 +13,15 @@ public partial class ShiftSettingView : UserControl
         if (this.DataContext is ShiftSettingViewModel viewModel)
         {
             _ = viewModel.LoadSettings();
+            viewModel.Init();
+        }
+    }
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        if (this.DataContext is ShiftSettingViewModel viewModel)
+        {
+            viewModel.Close();
         }
     }
     public ShiftSettingView()
