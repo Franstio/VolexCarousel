@@ -73,6 +73,7 @@ namespace VolexCarousel.Services
                             shiftname = shift.shiftname,
                             uid = uid,
                             targetoutput = shift.targetoutput,
+                            targetdailyoutput = shift.targetdailyoutput,
                             datetimeinput = DateTime.Now,
                         };
                         ShiftTransactionRecord.Enqueue(record);

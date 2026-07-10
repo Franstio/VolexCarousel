@@ -42,7 +42,7 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty]
         public int targetOutputShift = 0;
         [ObservableProperty]
-        public int speedInput = 0;
+        public int targetOutputDaily = 0;
 
         [ObservableProperty]
         public string logState = "Pause";
@@ -127,6 +127,7 @@ namespace VolexCarousel.ViewModels
         public async Task SetOutput()
         {
             await CarouselRepositoryService.UpdateTargetOutput(TargetOutputShift);
+            await CarouselRepositoryService.UpdateTargetDailyOutput(TargetOutputDaily);
         }
         [RelayCommand]
         public async Task SetAppinfo()

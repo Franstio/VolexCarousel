@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="550"
              Background="#132868"
-             Width="900" Height="650"
+             Width="1000" Height="560"
              xmlns:controls="using:VolexCarousel.Controls"
              xmlns:vm="using:VolexCarousel.ViewModels"
              x:DataType="vm:ShiftSettingViewModel"
@@ -118,12 +118,12 @@
                                 Grid.Row="2"
                                 Grid.Column="0"
                                 Foreground="White"
-                                Text="Speed:"
+                                Text="Target Daily Output:"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Stretch"
                                 FontSize="32"
                                 />
-                                <NumericUpDown Value="{Binding SpeedInput}" Grid.Column="1" Grid.Row="2" FontSize="32"/>
+                                <NumericUpDown Value="{Binding TargetOutputDaily}" Grid.Column="1" Grid.Row="2" FontSize="32"/>
                                 
                             </Grid>
                             

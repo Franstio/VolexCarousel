@@ -114,6 +114,7 @@ namespace VolexCarousel.ViewModels
                         datetimeinput = y?.datetimeinput ?? default,
                         datetimeoutput = y?.datetimeoutput ?? default,
                         targetoutput = x.x.targetoutput,
+                        targetdailyoutput = x.x.targetdailyoutput,
                         shiftname = x.x.shiftname
                     });
 
@@ -137,7 +138,7 @@ namespace VolexCarousel.ViewModels
                     joinData.GroupBy(x => x.shiftname).SelectMany(x => x.Select(y => new ShiftDailyOutputModel()
                     {
                         ShiftName = x.Key,
-                        TargetOutput = y.targetoutput,
+                        TargetOutput = y.targetdailyoutput,
                         TotalOutput = x.Count(z => z.datetimeoutput != default)
                     })).DistinctBy(x => x.ShiftName));
                 TotalOutput = ShiftTransactionRecords.Count.ToString();

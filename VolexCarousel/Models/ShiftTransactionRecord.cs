@@ -13,5 +13,6 @@ namespace VolexCarousel.Models
         public DateTime datetimeoutput { get; set; } = default;
         public string shiftname { get; set; } = string.Empty;
         public int targetoutput { get; set; } = 0;
+        public int targetdailyoutput { get; set; } = 0;
     }
 }

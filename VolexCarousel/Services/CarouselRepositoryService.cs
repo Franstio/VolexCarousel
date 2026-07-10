@@ -16,6 +16,7 @@ namespace VolexCarousel.Services
         public readonly string db_scheme = @"CREATE TABLE IF NOT EXISTS ""tbl_shift"" (
 	""shiftname""	TEXT,
 	""targetoutput""	INTEGER NOT NULL,
+	""targetdailyoutput""	INTEGER NOT NULL,
     ""shiftstart"" TEXT NOT NULL,
     ""shiftend"" TEXT NOT NULL,  
 	PRIMARY KEY(""shiftname"")
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_shiftrecord"" (
 	""datetimeinput""	TEXT NOT NULL,
 	""datetimeoutput""	TEXT NOT NULL,
     ""targetoutput"" INTEGER NOT NULL,
+    ""targetdailyoutput"" INTEGER NOT NULL,
 	PRIMARY KEY(""id"" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS ""tbl_users"" (
@@ -102,7 +104,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput,targetoutput) values(@shiftname,@datetimeinput,@datetimeoutput,@targetoutput);", record);
+                    await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput,targetdailyoutput,targetoutput) values(@shiftname,@datetimeinput,@datetimeoutput,@targetdailyoutput,@targetoutput);", record);
                     tr.Commit();
                 }
                 catch (Exception e)
@@ -124,7 +126,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select shiftname,datetimeinput,datetimeoutput,targetoutput from tbl_shiftrecord order by datetimeoutput desc limit @limit", limit);
+                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select shiftname,datetimeinput,datetimeoutput,targetdailyoutput,targetoutput from tbl_shiftrecord order by datetimeoutput desc limit @limit", limit);
                     return query;
                 }
                 catch (Exception e)
@@ -142,7 +144,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 {
                     db.Open();
                     (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Datetime(r.datetimeoutput) between DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam) and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift,prevLimitParam,nextLimitParam, limit });
+                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Datetime(r.datetimeoutput) between DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam) and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift,prevLimitParam,nextLimitParam, limit });
                     return query;
                 }
                 catch (Exception e)
@@ -232,11 +234,11 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 {
                     db.Open();
                     (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
-                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATETIME(r.datetimeoutput) BETWEEN DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam)", new {prevLimitParam,nextLimitParam});
+                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATETIME(r.datetimeoutput) BETWEEN DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam)", new {prevLimitParam,nextLimitParam});
                     var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
                     {
                         ShiftName = x.Key,
-                        TargetOutput = z.targetoutput,
+                        TargetOutput = z.targetdailyoutput,
                         TotalOutput = x.Count(x => x.datetimeoutput != default),
                     })).DistinctBy(x=>x.ShiftName) ;
                     return data!;
@@ -273,6 +275,30 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 }
             }
         }
+        public async Task UpdateTargetDailyOutput(int targetDailyOutput, string? shift = null)
+        {
+            using (db)
+            {
+                IDbTransaction tr = null!;
+                try
+                {
+                    await semaphore.WaitAsync();
+                    db.Open();
+                    tr = db.BeginTransaction(IsolationLevel.Serializable);
+                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetdailyoutput=@targetDailyOutput where shiftname=@shiftname or @shiftname is null", new { shiftname = shift, targetDailyOutput });
+                    tr.Commit();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message + " | " + e.StackTrace);
+                    tr.Rollback();
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+        }
         public async Task<IEnumerable< ShiftMasterRecord>> GetShift(string? shift = null)
         {
             using (db)
@@ -280,7 +306,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                 try
                 {
                     db.Open();
-                    var query = await db.QueryAsync<ShiftMasterRecord>("Select shiftname,targetoutput,shiftstart,shiftend from tbl_shift where shiftname=@shift or @shift is null", new { shift });
+                    var query = await db.QueryAsync<ShiftMasterRecord>("Select shiftname,targetdailyoutput,targetoutput,shiftstart,shiftend from tbl_shift where shiftname=@shift or @shift is null", new { shift });
                     return query;
                 }
                 catch (Exception e)
@@ -301,7 +327,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetoutput,shiftstart,shiftend) values(@shiftname,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString(@"hh\:mm\:ss"), shiftend = shift.shiftend.ToString(@"hh\:mm\:ss") });
+                    await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetdailyoutput,targetoutput,shiftstart,shiftend) values(@shiftname,@targetdailyoutput,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetdailyoutput=shift.targetdailyoutput, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString(@"hh\:mm\:ss"), shiftend = shift.shiftend.ToString(@"hh\:mm\:ss") });
                     tr.Commit();
                 }
                 catch (Exception e)
@@ -326,7 +352,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     await semaphore.WaitAsync();
                     db.Open();
                     tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, shiftstart = shiftData.shiftstart.ToString(@"hh\:mm\:ss"), shiftend =shiftData.shiftend.ToString(@"hh\:mm\:ss") });
+                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,targetdailyoutput=@targetdailyoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, targetdailyoutput=shiftData.targetdailyoutput, shiftstart = shiftData.shiftstart.ToString(@"hh\:mm\:ss"), shiftend =shiftData.shiftend.ToString(@"hh\:mm\:ss") });
                     tr.Commit();
                 }
                 catch (Exception e)
