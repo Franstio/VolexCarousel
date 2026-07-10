@@ -18,7 +18,7 @@ namespace VolexCarousel.Services
         private Guid uid = Guid.NewGuid(),ouid=Guid.NewGuid(),ouidcheck=Guid.NewGuid();
         private readonly ICheckItemService _plcService;
         private readonly ILogger<ItemCheckService> _logger;
-        private readonly string INPUT_ADDRESS = "MR001";
+        private readonly string INPUT_ADDRESS = "R003";
         private readonly string OUTPUT_ADDRESS = "MR002";
         private DateTime _boxByBoxRecord = DateTime.Now;
         private Queue<ShiftTransactionRecord> ShiftTransactionRecord = [];
