@@ -25,6 +25,12 @@ namespace VolexCarousel.ViewModels
             this.store = store;
             this.dbService = dbService;
         }
+
+        public void Init()
+        {
+            Username = String.Empty;
+            Password = string.Empty;
+        }
         [RelayCommand]
         public async Task Login()
         {

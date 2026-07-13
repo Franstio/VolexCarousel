@@ -96,7 +96,10 @@ namespace VolexCarousel.ViewModels
             Title = setting.Title;
             var shifts = await CarouselRepositoryService.GetShift();
             if (shifts.Any())
+            {
                 TargetOutputShift = shifts.First().targetoutput;
+                TargetOutputDaily = shifts.First().targetdailyoutput;
+            }
             foreach (var shift in shifts)
             {
                 switch (shift.shiftname)
