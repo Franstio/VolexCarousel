@@ -37,8 +37,8 @@ namespace VolexCarousel
             services.AddTransient<IDbConnection>((sp) =>
             {
 
-                var setting = sp.GetRequiredService<AppSettingService>();
-                return new SqliteConnection(setting.LoadSettings().CarouselDb);
+                var setting = (sp.GetRequiredService<AppSettingService>()).LoadSettings();
+                return new SqliteConnection(setting.CarouselDb);
             });
             SqlMapper.AddTypeHandler(new SQLTImespanHandler());
             services.AddTransient<CarouselRepositoryService>();

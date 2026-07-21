@@ -171,7 +171,7 @@ namespace VolexCarousel.ViewModels
         public void StartItemCheckInputService()
         {
             var cancellationToken = CancellationTokenSource.Token;
-            _ = Task.Run(async () =>
+            _ = Task.Run(async () => 
             {
                 await foreach (var record in _itemCheckService.RunCheckInput(cancellationToken))
                 {

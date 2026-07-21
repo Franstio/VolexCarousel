@@ -29,7 +29,7 @@ namespace VolexCarousel.Services
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(10);
+                await Task.Delay(10,cancellationToken);
                 if (!IsConnected)
                 {
                     try
@@ -40,11 +40,16 @@ namespace VolexCarousel.Services
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed to start TCP service");
-                        await Task.Delay(5000, cancellationToken); 
+                        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken); 
                         continue;
                     }
                 }
                 var data = await ReadData();
+                if (string.IsNullOrEmpty(data))
+                {
+                    Stop();
+                    Reconnect();
+                }
                 yield return data;
             }
             Stop();

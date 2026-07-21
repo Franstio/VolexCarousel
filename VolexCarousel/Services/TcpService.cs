@@ -102,6 +102,8 @@ namespace VolexCarousel.Services
             }
             catch (Exception e)
             {
+                this.Stop();
+                Reconnect();
                 semaphore.Release();
                 OnResponse?.Invoke("Error Reading: "+e.Message );
 
@@ -135,7 +137,13 @@ namespace VolexCarousel.Services
                 _logger.LogError(e.Message + " | " + e.StackTrace);
                 throw;
             }
-            return await ReadData();
+            var res = await ReadData();
+            if (string.IsNullOrEmpty(res))
+            {
+                Stop();
+                Reconnect();
+            }
+            return res;
         }
     }
 }
