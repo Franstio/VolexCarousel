@@ -97,7 +97,6 @@ namespace VolexCarousel.Services
                 var data = await _networkStream.ReadAsync(buffer, 0, buffer.Length,source.Token);
                 semaphore.Release();
                 var res = Encoding.ASCII.GetString(buffer, 0, data).Trim();
-                OnResponse?.Invoke(res);
                 return res;
             }
             catch (Exception e)
@@ -138,11 +137,13 @@ namespace VolexCarousel.Services
                 throw;
             }
             var res = await ReadData();
+            OnResponse?.Invoke($"Result {message} : {res}");
             if (string.IsNullOrEmpty(res))
             {
                 Stop();
                 Reconnect();
             }
+            
             return res;
         }
     }
