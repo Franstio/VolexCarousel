@@ -19,8 +19,7 @@ namespace VolexCarousel.Services
         private readonly ICheckItemService _plcService;
         private readonly ILogger<ItemCheckService> _logger;
         private readonly string INPUT_ADDRESS = "R003";
-        private readonly string OUTPUT_ADDRESS = "R001";
-        private DateTime _boxByBoxRecord = DateTime.Now;
+        private readonly string OUTPUT_ADDRESS = "MR100";
         private Queue<ShiftTransactionRecord> ShiftTransactionRecord = [];
         private readonly CarouselRepositoryService carouselRepositoryService;
         public ItemCheckService(ICheckItemService tcpPLCService, ILogger<ItemCheckService> logger,

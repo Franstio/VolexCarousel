@@ -50,7 +50,8 @@ namespace VolexCarousel.Services
                     Stop();
                     Reconnect();
                 }
-                yield return data;
+                else
+                    yield return data;
             }
             Stop();
         }
