@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,6 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using VolexCarousel.Models;
 using VolexCarousel.Services;
@@ -43,16 +45,19 @@ namespace VolexCarousel.ViewModels
         private List<ShiftTransactionRecord> ShiftTransactionRecords = [];
         private DateTime startTime = DateTime.Now,endTime = DateTime.Now;
         private readonly InformationSpeedService _informationSpeedService;
-        private readonly ItemCheckService _itemCheckService;
         private readonly CarouselRepositoryService _carouselRepositoryService;
         private DispatcherTimer timerDate;
-
+        private readonly ChannelReader<DateTime> boxTimeReader;
+        private readonly ChannelReader<ShiftTransactionRecord> transactionChannelReader;
         private static CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, ItemCheckService itemCheckService, CarouselRepositoryService carouselRepositoryService)
+        public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService,
+            [FromKeyedServices("boxTimeChannel")] Channel<DateTime> boxChannel,
+            [FromKeyedServices("itemChannel")] Channel<ShiftTransactionRecord> itemChannel)
         {
             _informationSpeedService = informationSpeedService;
-            _itemCheckService = itemCheckService;
             _carouselRepositoryService = carouselRepositoryService;
+            transactionChannelReader = itemChannel.Reader;
+            boxTimeReader = boxChannel.Reader;
 
             AppSettingService = appSettingService;
             if (!string.IsNullOrEmpty(appSettingService.LoadSettings().Title))
@@ -71,18 +76,17 @@ namespace VolexCarousel.ViewModels
             };
 
         }
-        public async void Initialization()
+        public void Initialization()
         {
             timerDate.Start();
-            await LoadInitData();
-            StartItemCheckInputService();
-            StartItemCheckOutputService();
-            StartInformationSpeedService();
+            _ = Task.WhenAll([LoadInitData(),StartReadingTimeInput(), StartReadingTransaction()
+//            ,StartInformationSpeedService()
+            ]);
         }
 
-        private async Task LoadInitData()
+        private Task LoadInitData()
         {
-            await Dispatcher.UIThread.InvokeAsync(async () =>
+            return Dispatcher.UIThread.InvokeAsync(async () =>
             {
 
 
@@ -146,57 +150,47 @@ namespace VolexCarousel.ViewModels
 
 
         }
-        public void StartInformationSpeedService()
+        public async Task StartInformationSpeedService()
         {
             var cancellationToken = CancellationTokenSource.Token;
-            _ = Task.Run(async () =>
+
+            await foreach (var data in _informationSpeedService.ReadDataStreamAsync(cancellationToken))
             {
-                await foreach (var data in _informationSpeedService.ReadDataStreamAsync(cancellationToken))
+                Dispatcher.UIThread.Invoke(() =>
                 {
-                    Dispatcher.UIThread.Invoke(() =>
-                    {
-                        InformationSpeedData = data;
-                    });
-                }
-            }, cancellationToken);
+                    InformationSpeedData = data;
+                });
+            }
         }
         public void StopServices()
         {
             timerDate.Stop();
             CancellationTokenSource.Cancel();
             CancellationTokenSource = new CancellationTokenSource();
-            _itemCheckService.Stop();
         }
 
-        public void StartItemCheckInputService()
+        public async Task StartReadingTimeInput()
         {
             var cancellationToken = CancellationTokenSource.Token;
-            _ = Task.Run(async () => 
+            await foreach (var time in boxTimeReader.ReadAllAsync(cancellationToken))
             {
-                await foreach (var record in _itemCheckService.RunCheckInput(cancellationToken))
-                {
-                    if (endTime != record.datetimeinput)
-                    {
-                        startTime = endTime;
-                        endTime = record.datetimeinput;
-                    }
-                }
-            }, cancellationToken);
+                    startTime = endTime;
+                    endTime = time;
+            }
         }
-        public void StartItemCheckOutputService()
+        public async Task StartReadingTransaction()
         {
             var cancellationToken = CancellationTokenSource.Token;
-            _ = Task.Run(async () =>
+
+            await foreach (var record in transactionChannelReader.ReadAllAsync(cancellationToken))
             {
-                await foreach (var record in _itemCheckService.RunCheckOutput(cancellationToken))
+                await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
-                        await _carouselRepositoryService.RecordItemInput(record);
-                        await SetDataShifts(record);
-                    });
-                }
-            }, cancellationToken);
+                    TimeSpan diff = record.datetimeoutput - record.datetimeinput;
+                    InformationSpeedData = (AppSettingService.LoadSettings().CarouselLength / diff.TotalSeconds).ToString("0.0");
+                    await SetDataShifts(record);
+                });
+            }
         }
 
     }

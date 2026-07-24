@@ -12,6 +12,7 @@ namespace VolexCarousel.Models
         public string InformationSpeedPort { get; set; } = string.Empty;
         public string PLCPort { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
+        public double CarouselLength { get; set; } = 1.9;
         public string CarouselDb { get; set; } = $"data source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "carousel.db")};default timeout=3000";
 
     }

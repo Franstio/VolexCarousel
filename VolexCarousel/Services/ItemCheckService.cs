@@ -1,4 +1,6 @@
 ﻿using Avalonia.Media;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System;
@@ -7,124 +9,84 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using VolexCarousel.Interfaces;
 using VolexCarousel.Models;
 
 namespace VolexCarousel.Services
 {
-    public class ItemCheckService
+    public class ItemCheckService : BackgroundService
     {
-        private Guid uid = Guid.NewGuid(),ouid=Guid.NewGuid(),ouidcheck=Guid.NewGuid();
-        private readonly ICheckItemService _plcService;
         private readonly ILogger<ItemCheckService> _logger;
-        private readonly string INPUT_ADDRESS = "R003";
-        private readonly string OUTPUT_ADDRESS = "MR100";
-        private Queue<ShiftTransactionRecord> ShiftTransactionRecord = [];
+        private readonly string SENSOR_ADDRESS = "R003";
         private readonly CarouselRepositoryService carouselRepositoryService;
-        public ItemCheckService(ICheckItemService tcpPLCService, ILogger<ItemCheckService> logger,
-            CarouselRepositoryService carouselRepositoryService)
+        private ShiftTransactionRecord? ShiftTransactionRecord = null;
+        private ChannelReader<DateTime> reader;
+        private ChannelWriter<DateTime> writer;
+        private ChannelWriter<ShiftTransactionRecord> itemWriter;
+        public ItemCheckService( 
+            ILogger<ItemCheckService> logger,
+            CarouselRepositoryService carouselRepositoryService,
+            [FromKeyedServices("sensorChannel")] Channel<DateTime> sensorReader,
+            [FromKeyedServices("boxTimeChannel")] Channel<DateTime> boxChannel,
+            [FromKeyedServices("itemChannel")] Channel<ShiftTransactionRecord> _itemWriter)
         {
-            _plcService = tcpPLCService;
             _logger = logger;
+            reader = sensorReader.Reader;
+            writer = boxChannel.Writer;
+            itemWriter = _itemWriter.Writer;
             this.carouselRepositoryService = carouselRepositoryService;
         }
 
 
-        public async Task<bool> CheckItemInput()
-        {
-            var data = await _plcService.CheckItemAsync(INPUT_ADDRESS);
-            return !string.IsNullOrEmpty(data) ? data == "OK" || data == "1" : false;
-        }
 
-        public async Task<bool> CheckItemOutput()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var data = await _plcService.CheckItemAsync(OUTPUT_ADDRESS);
-            return !string.IsNullOrEmpty(data) ? data == "OK" || data == "1" : false;
-        }
 
-        public async IAsyncEnumerable<ShiftTransactionRecord> RunCheckInput([EnumeratorCancellation] CancellationToken cancelTokenSource=default)
-        {
-            _plcService.Start();
-            while (!cancelTokenSource.IsCancellationRequested)
+            await foreach (var time in reader.ReadAllAsync(stoppingToken))
             {
-                ShiftTransactionRecord? record = null;
-                await Task.Delay(50,cancelTokenSource);
                 try
                 {
 
-                    if (await CheckItemInput())
-                    {
-                        if (ShiftTransactionRecord.Any() && ShiftTransactionRecord.LastOrDefault()?.uid == uid) continue;
 
-                        var shifts = await carouselRepositoryService.GetShift();
-                        if (shifts is null || !shifts.Any()) continue;
+                    var shifts = await carouselRepositoryService.GetShift();
+                    if (shifts is null || !shifts.Any()) continue;
+                    if (ShiftTransactionRecord is null)
+                    {
                         var shift = shifts.
-                            Where(x => {
+                            FirstOrDefault(x =>
+                            {
                                 if (x.shiftstart < x.shiftend)
                                     return x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay;
                                 else
                                     return x.shiftstart <= DateTime.Now.TimeOfDay || x.shiftend >= DateTime.Now.TimeOfDay;
-                            }).FirstOrDefault();
+                            });
                         if (shift is null) continue;
-                        record = new Models.ShiftTransactionRecord()
+                        ShiftTransactionRecord = new Models.ShiftTransactionRecord()
                         {
                             shiftname = shift.shiftname,
-                            uid = uid,
+                            uid = Guid.NewGuid(),
                             targetoutput = shift.targetoutput,
                             targetdailyoutput = shift.targetdailyoutput,
-                            datetimeinput = DateTime.Now,
+                            datetimeinput = time,
                         };
-                        ShiftTransactionRecord.Enqueue(record);
+                        await writer.WriteAsync(time);
                     }
                     else
-                        uid = Guid.NewGuid();
+                    {
+                        ShiftTransactionRecord.datetimeoutput = time;
+                        await carouselRepositoryService.RecordItemInput(ShiftTransactionRecord);
+                        await itemWriter.WriteAsync(ShiftTransactionRecord,stoppingToken);
+                        ShiftTransactionRecord = null;
+                    }
+
                 }
                 catch (Exception e)
                 {
                     _logger.LogError(e.Message + " | " + e.StackTrace);
                 }
-                if (record is not null)
-                    yield return record;
-                }
-        }
-        public void Stop()
-        {
-            _plcService.Stop();
-        }
-
-        public async IAsyncEnumerable<ShiftTransactionRecord> RunCheckOutput([EnumeratorCancellation] CancellationToken cancelTokenSource = default)
-        {
-            _plcService.Start();
-            while (!cancelTokenSource.IsCancellationRequested)
-            {
-                await Task.Delay(50,cancelTokenSource);
-                ShiftTransactionRecord? item = null;
-                try
-                {
-                    if (await CheckItemOutput())
-                    {
-                        if (ouid == ouidcheck) continue;
-
-                        if (!ShiftTransactionRecord.Any()) continue;
-                        item = ShiftTransactionRecord.Dequeue();
-
-                        ouidcheck = ouid;
-                        item.datetimeoutput = DateTime.Now;
-                    }
-                    else
-                        ouid = Guid.NewGuid();
-                }
-                catch(Exception e)
-                {
-                    _logger.LogError(e.Message + " | " + e.StackTrace);
-                }
-                if (item is not null)
-                    yield return item;
             }
         }
-
-
-
     }
 }

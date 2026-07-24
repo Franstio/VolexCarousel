@@ -10,6 +10,7 @@ using Avalonia.Markup.Xaml;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using VolexCarousel.Interfaces;
@@ -31,37 +32,8 @@ namespace VolexCarousel
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            ServiceCollection services = new ServiceCollection();
 
-            services.AddSingleton<AppSettingService>();
-            services.AddTransient<IDbConnection>((sp) =>
-            {
-
-                var setting = (sp.GetRequiredService<AppSettingService>()).LoadSettings();
-                return new SqliteConnection(setting.CarouselDb);
-            });
-            SqlMapper.AddTypeHandler(new SQLTImespanHandler());
-            services.AddTransient<CarouselRepositoryService>();
-            services.AddTransient<MainWindowViewModel>();
-            services.AddTransient<DashboardViewModel>();
-            services.AddTransient<LoginViewModel>();
-            services.AddTransient<ShiftSettingViewModel>();
-            services.AddSingleton<UserStore>();
-            services.AddSingleton<InformationSpeedService>();
-            services.AddSingleton<TCPPLCService>();
-            services.AddSingleton<ICheckItemService>(sp => sp.GetRequiredService<TCPPLCService>());
-            services.AddSingleton<ItemCheckService>();
-
-            services.AddLogging(l =>
-            {
-                l.AddSerilog(new LoggerConfiguration().Enrich.FromLogContext()
-                    .WriteTo.SQLite(Path.Combine(AppContext.BaseDirectory, "logs.db"),"tbl_log",restrictedToMinimumLevel:LogEventLevel.Debug,rollOver:true)
-                    .CreateLogger());
-            });
-            var service = services.BuildServiceProvider();
-            var carouselRepo = service.GetRequiredService<CarouselRepositoryService>();
-            await carouselRepo.Initialization();
-            var vm = service.GetService<MainWindowViewModel>();
+            var vm = Program.HostApp.Services.GetService<MainWindowViewModel>();
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow
