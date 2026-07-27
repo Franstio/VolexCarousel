@@ -67,12 +67,14 @@ namespace VolexCarousel.ViewModels
         }
         private void acceptLog(string log)
         {
-            Dispatcher.UIThread.Invoke(()=>
-            Logs.Add(new LogModel()
+            Dispatcher.UIThread.Invoke(() =>
             {
-                log=log,
-                time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-            }));
+                Logs.Insert(0,new LogModel()
+                {
+                    log = log,
+                    time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                });
+            });
         }
         [RelayCommand]
         public void ClearLog() => Logs.Clear();
