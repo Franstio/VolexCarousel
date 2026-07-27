@@ -19,9 +19,7 @@ namespace VolexCarousel.Services
     public class ItemCheckService : BackgroundService
     {
         private readonly ILogger<ItemCheckService> _logger;
-        private readonly string SENSOR_ADDRESS = "R003";
         private readonly CarouselRepositoryService carouselRepositoryService;
-        private ShiftTransactionRecord? ShiftTransactionRecord = null;
         private ChannelReader<DateTime> reader;
         private ChannelWriter<DateTime> writer;
         private ChannelWriter<ShiftTransactionRecord> itemWriter;
@@ -52,35 +50,27 @@ namespace VolexCarousel.Services
 
                     var shifts = await carouselRepositoryService.GetShift();
                     if (shifts is null || !shifts.Any()) continue;
-                    if (ShiftTransactionRecord is null)
-                    {
-                        var shift = shifts.
-                            FirstOrDefault(x =>
-                            {
-                                if (x.shiftstart < x.shiftend)
-                                    return x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay;
-                                else
-                                    return x.shiftstart <= DateTime.Now.TimeOfDay || x.shiftend >= DateTime.Now.TimeOfDay;
-                            });
-                        if (shift is null) continue;
-                        ShiftTransactionRecord = new Models.ShiftTransactionRecord()
+                    var shift = shifts.
+                        FirstOrDefault(x =>
                         {
-                            shiftname = shift.shiftname,
-                            uid = Guid.NewGuid(),
-                            targetoutput = shift.targetoutput,
-                            targetdailyoutput = shift.targetdailyoutput,
-                            datetimeinput = time,
-                        };
-                        await writer.WriteAsync(time);
-                    }
-                    else
+                            if (x.shiftstart < x.shiftend)
+                                return x.shiftstart <= DateTime.Now.TimeOfDay && x.shiftend >= DateTime.Now.TimeOfDay;
+                            else
+                                return x.shiftstart <= DateTime.Now.TimeOfDay || x.shiftend >= DateTime.Now.TimeOfDay;
+                        });
+                    if (shift is null) continue;
+                    var ShiftTransactionRecord = new Models.ShiftTransactionRecord()
                     {
-                        ShiftTransactionRecord.datetimeoutput = time;
-                        await carouselRepositoryService.RecordItemInput(ShiftTransactionRecord);
-                        await itemWriter.WriteAsync(ShiftTransactionRecord,stoppingToken);
-                        ShiftTransactionRecord = null;
-                    }
-
+                        shiftname = shift.shiftname,
+                        uid = Guid.NewGuid(),
+                        targetoutput = shift.targetoutput,
+                        targetdailyoutput = shift.targetdailyoutput,
+                        datetimeinput = time,
+                        datetimeoutput = time,
+                    };
+                    await writer.WriteAsync(time, stoppingToken);
+                    await itemWriter.WriteAsync(ShiftTransactionRecord, stoppingToken);
+                    await carouselRepositoryService.RecordItemInput(ShiftTransactionRecord);
                 }
                 catch (Exception e)
                 {

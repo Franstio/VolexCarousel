@@ -163,7 +163,7 @@
                                Classes="CardTitle"/>
                     <TextBlock Text="{Binding InformationSpeedData}"
                                Classes="BigValue"/>
-                    <TextBlock Text="/MS"
+                    <TextBlock Text="M/S"
                                Classes="ValueUnit"/>
                 </StackPanel>
             </Border>

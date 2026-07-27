@@ -5,6 +5,7 @@ using SkiaSharp;
 using SQLitePCL;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -142,6 +143,7 @@ namespace VolexCarousel.Services
             {
                 Stop();
                 Reconnect();
+                throw new NoNullAllowedException("PLC Return is null or empty");
             }
             
             return res;

@@ -66,7 +66,7 @@ namespace VolexCarousel.ViewModels
             }
             timerDate = new DispatcherTimer()
             {
-                Interval = TimeSpan.FromSeconds(1)
+                Interval = TimeSpan.FromMilliseconds(30)
             };
             timerDate.Tick += (o, e) => {
                 Time = DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss");
@@ -186,8 +186,12 @@ namespace VolexCarousel.ViewModels
             {
                 await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    TimeSpan diff = record.datetimeoutput - record.datetimeinput;
-                    InformationSpeedData = (AppSettingService.LoadSettings().CarouselLength / diff.TotalSeconds).ToString("0.0");
+                    var lastRecord = ShiftTransactionRecords.OrderBy(x=>x.datetimeoutput).LastOrDefault();
+                    if (lastRecord is not null)
+                    {
+                        TimeSpan diff = record.datetimeoutput - lastRecord.datetimeoutput;
+                        InformationSpeedData = (AppSettingService.LoadSettings().ModuleDistanceLength / diff.TotalSeconds).ToString("0.0");
+                    }
                     await SetDataShifts(record);
                 });
             }

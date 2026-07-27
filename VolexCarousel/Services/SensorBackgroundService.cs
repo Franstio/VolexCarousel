@@ -65,7 +65,7 @@ namespace VolexCarousel.Services
                 }
                 finally
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(300));
+                    await Task.Delay(TimeSpan.FromMilliseconds(50));
                 }
             }
         }
