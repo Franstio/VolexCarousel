@@ -5,11 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using VolexCarousel.Models;
+using VolexCarousel.Core.Interfaces;
+using VolexCarousel.Core.Models;
 
-namespace VolexCarousel.Services
+namespace VolexCarousel.Core.Services
 {
-    public class AppSettingService
+    public class AppSettingService 
     {
         private readonly static string basePath = AppDomain.CurrentDomain.BaseDirectory;
         private readonly static string settingName = "appsettings.json";

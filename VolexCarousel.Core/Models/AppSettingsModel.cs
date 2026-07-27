@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VolexCarousel.Core.Interfaces;
 
-namespace VolexCarousel.Models
+namespace VolexCarousel.Core.Models
 {
-    public class AppSettingsModel
+    public class AppSettingsModel 
     {
         public string InformationSpeedPort { get; set; } = string.Empty;
         public string PLCPort { get; set; } = string.Empty;

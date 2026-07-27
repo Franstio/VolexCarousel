@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VolexCarousel.Interfaces
+namespace VolexCarousel.Core.Interfaces
 {
     public interface ICheckItemService
     {

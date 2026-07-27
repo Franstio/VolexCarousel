@@ -3,13 +3,16 @@ using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ModbusProxy;
 using Serilog;
 using Serilog.Events;
 using System;
 using System.Data;
 using System.IO;
 using System.Threading.Channels;
-using VolexCarousel.Interfaces;
+using VolexCarousel.Core.Interfaces;
+using VolexCarousel.Core.Services;
+using VolexCarousel.Core.Models;
 using VolexCarousel.Mappers;
 using VolexCarousel.Models;
 using VolexCarousel.Services;
@@ -73,6 +76,14 @@ namespace VolexCarousel
                     .WriteTo.SQLite(Path.Combine(AppContext.BaseDirectory, "logs.db"), "tbl_log", restrictedToMinimumLevel: LogEventLevel.Debug, rollOver: true)
                     .CreateLogger());
             });
+            //using ModbusProxy, remove this code if volexcarousel need to be standalone without modbusproxy
+            builder.Services.AddSingleton<ModbusProxyService>();
+            builder.Services.AddHostedService(sp => sp.GetRequiredService<ModbusProxyService>());
+            builder.Services.AddHostedService<ModbusWorkService>();
+
+            //
+
+
             services.AddHostedService<DesktopAppService>();
             HostApp = builder.Build();
             var carouselRepo = HostApp.Services.GetRequiredService<CarouselRepositoryService>();
@@ -84,9 +95,6 @@ namespace VolexCarousel
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-#if DEBUG
-                .WithDeveloperTools()
-#endif
                 .WithInterFont()
                 .LogToTrace();
     }

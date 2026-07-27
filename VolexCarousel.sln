@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.37111.16 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12021.73
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VolexCarousel", "VolexCarousel\VolexCarousel.csproj", "{6895D875-9314-45A7-A6BA-ABD4E29CA510}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusProxy", "..\ModbusProxy\ModbusProxy\ModbusProxy.csproj", "{8BE370EB-3C25-0875-BA11-6067368BFAD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VolexCarousel.Core", "VolexCarousel.Core\VolexCarousel.Core.csproj", "{F2A1D03A-A119-48D4-B770-DBCB11E87C84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{6895D875-9314-45A7-A6BA-ABD4E29CA510}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6895D875-9314-45A7-A6BA-ABD4E29CA510}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6895D875-9314-45A7-A6BA-ABD4E29CA510}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BE370EB-3C25-0875-BA11-6067368BFAD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BE370EB-3C25-0875-BA11-6067368BFAD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BE370EB-3C25-0875-BA11-6067368BFAD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BE370EB-3C25-0875-BA11-6067368BFAD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2A1D03A-A119-48D4-B770-DBCB11E87C84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2A1D03A-A119-48D4-B770-DBCB11E87C84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2A1D03A-A119-48D4-B770-DBCB11E87C84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2A1D03A-A119-48D4-B770-DBCB11E87C84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,8 +1,5 @@
-﻿using Avalonia.Vulkan;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using SkiaSharp;
-using SQLitePCL;
+﻿using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VolexCarousel.Services
+namespace VolexCarousel.Core.Services
 {
     public abstract class TcpService
     {

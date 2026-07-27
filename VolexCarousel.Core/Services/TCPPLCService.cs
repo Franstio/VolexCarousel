@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using NModbus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +7,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using VolexCarousel.Interfaces;
+using VolexCarousel.Core.Interfaces;
 
-namespace VolexCarousel.Services
+namespace VolexCarousel.Core.Services
 {
     public class TCPPLCService : TcpService,ICheckItemService
     {
@@ -58,17 +57,17 @@ namespace VolexCarousel.Services
             return result;
         }
 
-        public async Task<IEnumerable<string>> PushCommand(string command,TimeSpan interval,params string[] values)
+        public async IAsyncEnumerable<string> PushCommand(string command,TimeSpan interval,params string[] values)
         {
             List<string> results = [];
             for (int i = 0; i < values.Length; i++)
             {
                 string result = await WriteData($"WR {command} {values[i]}\r\n");
                 _logger.LogDebug(result);
-                results.Add(result);
+
+                yield return result; 
                 await Task.Delay(interval);
             }
-            return results;
         }
 
         public async Task<string> CheckItemAsync(object id)

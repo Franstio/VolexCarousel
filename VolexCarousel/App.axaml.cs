@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using VolexCarousel.Interfaces;
+using VolexCarousel.Core.Interfaces;
 using VolexCarousel.Mappers;
 using VolexCarousel.Services;
 using VolexCarousel.Store;
