@@ -19,7 +19,7 @@ namespace VolexCarousel.Services
         private readonly ChannelWriter<DateTime> channelWriter;
         private readonly ILogger<SensorBackgroundService> logger;
         private readonly string SENSOR_ADDRESS = "R003";
-        private bool firstCheck = false,secondCheck=false;
+        private bool firstCheck = false,secondCheck=false,thirdCheck=false;
         
         public SensorBackgroundService(ICheckItemService _checkItemService,
             [FromKeyedServices("sensorChannel")] Channel<DateTime> sensorChannel,
@@ -47,15 +47,17 @@ namespace VolexCarousel.Services
                 {
                     if (!firstCheck)
                         firstCheck = (await checkItemService.CheckItemAsync(SENSOR_ADDRESS)) == "0";
-                    else
+                    else if (firstCheck && !secondCheck)
                         secondCheck = (await checkItemService.CheckItemAsync(SENSOR_ADDRESS) == "1");
-
-                    if (firstCheck && secondCheck)
+                    else if (firstCheck && secondCheck)
+                        thirdCheck = (await checkItemService.CheckItemAsync(SENSOR_ADDRESS)) == "0"; 
+                    if (firstCheck && secondCheck && thirdCheck)
                     {
                         if (channelWriter.TryWrite(DateTime.Now))
                         {
                             firstCheck = false;
                             secondCheck = false;
+                            thirdCheck = false;
                         }
                     }
                 }

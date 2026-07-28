@@ -65,7 +65,7 @@
                 Value="Bold"/>
 
         <Setter Property="FontSize"
-                Value="128"/>
+                Value="116"/>
 
     </Style>
 

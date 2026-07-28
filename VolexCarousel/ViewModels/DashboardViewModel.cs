@@ -1,6 +1,8 @@
+using Avalonia.Logging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -51,15 +53,17 @@ namespace VolexCarousel.ViewModels
         private readonly ChannelReader<DateTime> boxTimeReader;
         private readonly ChannelReader<ShiftTransactionRecord> transactionChannelReader;
         private static CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+        ILogger<DashboardViewModel> logger;
         public DashboardViewModel(InformationSpeedService informationSpeedService, AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService,
             [FromKeyedServices("boxTimeChannel")] Channel<DateTime> boxChannel,
-            [FromKeyedServices("itemChannel")] Channel<ShiftTransactionRecord> itemChannel)
+            [FromKeyedServices("itemChannel")] Channel<ShiftTransactionRecord> itemChannel,
+            ILogger<DashboardViewModel> logger)
         {
             _informationSpeedService = informationSpeedService;
             _carouselRepositoryService = carouselRepositoryService;
             transactionChannelReader = itemChannel.Reader;
             boxTimeReader = boxChannel.Reader;
-
+            this.logger = logger;
             AppSettingService = appSettingService;
             if (!string.IsNullOrEmpty(appSettingService.LoadSettings().Title))
             {
@@ -191,7 +195,7 @@ namespace VolexCarousel.ViewModels
                     if (lastRecord is not null)
                     {
                         TimeSpan diff = record.datetimeoutput - lastRecord.datetimeoutput;
-                        InformationSpeedData = (AppSettingService.LoadSettings().ModuleDistanceLength / diff.TotalSeconds).ToString("0.0");
+                        InformationSpeedData = (AppSettingService.LoadSettings().ModuleDistanceLength / diff.TotalSeconds).ToString("0.00");
                     }
                     await SetDataShifts(record);
                 });

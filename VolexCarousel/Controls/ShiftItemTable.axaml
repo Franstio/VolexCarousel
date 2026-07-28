@@ -113,7 +113,7 @@
                 Value="Bold"/>
 
         <Setter Property="FontSize"
-                Value="24"/>
+                Value="18"/>
 
         <Setter Property="HorizontalAlignment"
                 Value="Center"/>

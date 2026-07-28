@@ -85,7 +85,7 @@
                             <DataGridTemplateColumn Header="Shift">
                             <DataGridTemplateColumn.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                    <TextBlock HorizontalAlignment="Center" FontSize="9" Text="{Binding}"/>
                                 </DataTemplate>
                              </DataGridTemplateColumn.HeaderTemplate>
                             <DataGridTemplateColumn.CellTemplate>
@@ -98,7 +98,7 @@
                             <DataGridTemplateColumn Header="Target Output">
                             <DataGridTemplateColumn.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                    <TextBlock HorizontalAlignment="Center" FontSize="9" Text="{Binding}"/>
                                 </DataTemplate>
                              </DataGridTemplateColumn.HeaderTemplate>
                              <DataGridTemplateColumn.CellTemplate>
@@ -113,7 +113,7 @@
                             <DataGridTemplateColumn Header="Total Output">
                             <DataGridTemplateColumn.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                                    <TextBlock HorizontalAlignment="Center" FontSize="9" Text="{Binding}"/>
                                 </DataTemplate>
                              </DataGridTemplateColumn.HeaderTemplate>
                              <DataGridTemplateColumn.CellTemplate>
