@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using VolexCarousel.Core.Models;
 using VolexCarousel.Core.Services;
 using VolexCarousel.Models;
 using VolexCarousel.Services;
@@ -44,7 +45,7 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty]
         string time = DateTime.Now.ToString("dd MMMM yyyy HH:mm:dd");
 
-        private AppSettingService AppSettingService;
+        private Func<AppSettingsModel> AppSettingService;
         private List<ShiftTransactionRecord> ShiftTransactionRecords = [];
         private DateTime startTime = DateTime.Now,endTime = DateTime.Now;
         private readonly InformationSpeedService _informationSpeedService;
@@ -64,11 +65,8 @@ namespace VolexCarousel.ViewModels
             transactionChannelReader = itemChannel.Reader;
             boxTimeReader = boxChannel.Reader;
             this.logger = logger;
-            AppSettingService = appSettingService;
-            if (!string.IsNullOrEmpty(appSettingService.LoadSettings().Title))
-            {
-                Title = appSettingService.LoadSettings().Title;
-            }
+            AppSettingService = appSettingService.LoadSettings;
+            
             timerDate = new DispatcherTimer()
             {
                 Interval = TimeSpan.FromMilliseconds(30)
@@ -78,6 +76,10 @@ namespace VolexCarousel.ViewModels
 
                 TimeSpan dt = endTime > startTime ? (endTime - startTime) : startTime - endTime;
                 BoxByBox = dt.TotalSeconds.ToString("0.0");
+                if (!string.IsNullOrEmpty(appSettingService.LoadSettings().Title))
+                {
+                    Title = appSettingService.LoadSettings().Title;
+                }
             };
 
         }
@@ -114,7 +116,7 @@ namespace VolexCarousel.ViewModels
             ShiftTransactionRecords.AddRange(await _carouselRepositoryService.GetTodayShiftRecord());
             //            ShiftTransactionRecords.Add(record);
 
-            var records = ShiftTransactionRecords.Where(x => x.shiftname == record.shiftname).OrderBy(x => x.datetimeinput);
+            var records = ShiftTransactionRecords.OrderBy(x => x.datetimeinput);
             var joinData = rows.GroupJoin(records, x => x.shiftname, z => z.shiftname, (x, y) => new { x, y }
                     ).SelectMany((x) => x.y.DefaultIfEmpty(), (x, y) =>
                     new ShiftTransactionRecord()
@@ -127,19 +129,10 @@ namespace VolexCarousel.ViewModels
                         shiftname = x.x.shiftname
                     });
 
-            if (record.shiftname == "Day")
-            {
-                PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay(record.shiftname,records));
+            PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Day", records));
+            SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Noon", records));
+            MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Night", records));
 
-            }
-            else if (record.shiftname == "Noon")
-            {
-                SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay(record.shiftname,records));
-            }
-            else if (record.shiftname == "Night")
-            {
-                MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay(record.shiftname, records));
-            }
             Dispatcher.UIThread.Invoke(() =>
             {
 
@@ -195,10 +188,11 @@ namespace VolexCarousel.ViewModels
                     if (lastRecord is not null)
                     {
                         TimeSpan diff = record.datetimeoutput - lastRecord.datetimeoutput;
-                        InformationSpeedData = (AppSettingService.LoadSettings().ModuleDistanceLength / diff.TotalSeconds).ToString("0.00");
+                        InformationSpeedData = (AppSettingService().ModuleDistanceLength / diff.TotalSeconds).ToString("0.00");
                     }
-                    await SetDataShifts(record);
+
                 });
+                await SetDataShifts(record);
             }
         }
 

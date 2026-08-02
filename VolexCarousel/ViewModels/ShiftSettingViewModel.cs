@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using AvaloniaDialogs.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -46,7 +47,7 @@ namespace VolexCarousel.ViewModels
         public int targetOutputDaily = 0;
 
         [ObservableProperty]
-        public string logState = "Pause";
+        public string logState = "Resume";
 
         private readonly TCPPLCService tcpPLCService;
 
@@ -140,6 +141,15 @@ namespace VolexCarousel.ViewModels
         {
             await SetTitle();
             await SetOutput();
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                SingleActionDialog dialog = new()
+                {
+                    Message = "Settings saved",
+                    ButtonText = "Ok"
+                };
+                await dialog.ShowAsync();
+            });
         }
 
         public async Task SetDayShift(string shiftName,TimeSpan shiftStart,TimeSpan shiftEnd)
@@ -183,6 +193,15 @@ namespace VolexCarousel.ViewModels
                 }
                 await SetDayShift(shiftName, shiftStart, shiftEnd);
             }
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                SingleActionDialog dialog = new()
+                {
+                    Message = "Settings saved",
+                    ButtonText = "Ok"
+                };
+                await dialog.ShowAsync();
+            });
         }
 
     }

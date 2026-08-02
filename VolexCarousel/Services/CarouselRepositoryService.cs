@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
                     hour = shiftData.shiftstart.Add(TimeSpan.FromHours(x)).Hours
                 });
 
-                var data = shift.GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).Select(x => new
+                var data = shift.Where(x=>x.shiftname==shiftName).GroupBy(x => new { shiftname = x.shiftname, hour = x.datetimeoutput.Hour }).Select(x => new
                 {
                     totalOutput = x.Count(),
                     shiftName = x.Key.shiftname,

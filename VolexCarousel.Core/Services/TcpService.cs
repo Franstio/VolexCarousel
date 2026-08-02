@@ -81,10 +81,10 @@ namespace VolexCarousel.Core.Services
             CancellationTokenSource source = new CancellationTokenSource();
             try
             {
-                source.Token.ThrowIfCancellationRequested();
-                source.CancelAfter(TimeSpan.FromSeconds(2));
                 DateTime dt = DateTime.Now;
                 await semaphore.WaitAsync();
+                source.Token.ThrowIfCancellationRequested();
+                source.CancelAfter(TimeSpan.FromSeconds(5));
                 Reconnect();
                 if (_networkStream == null)
                 {

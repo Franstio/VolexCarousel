@@ -21,7 +21,7 @@ namespace VolexCarousel.Services
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await plcService.WriteCommand("MR701","1");
+            _ = Task.Run(()=>plcService.WriteCommand("MR701","1"));
             Program.BuildAvaloniaApp().StartWithClassicDesktopLifetime(Environment.GetCommandLineArgs());
             this.hostApplicationLifetime.StopApplication();
         }
