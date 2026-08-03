@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaDialogs.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -49,6 +50,16 @@ namespace VolexCarousel.ViewModels
         [ObservableProperty]
         public string logState = "Resume";
 
+        [ObservableProperty]
+        public string? selectedShift = "Day";
+
+        [ObservableProperty]
+        public ObservableCollection<string> resetShifts = new ObservableCollection<string>([
+            "Day",
+            "Noon",
+            "Night"
+            ]);
+
         private readonly TCPPLCService tcpPLCService;
 
         public ShiftSettingViewModel(AppSettingService appSettingService, CarouselRepositoryService carouselRepositoryService, TCPPLCService tcpPLCService)
@@ -92,6 +103,24 @@ namespace VolexCarousel.ViewModels
             {
                 Init();
                 LogState = "Pause";
+            }
+        }
+        [RelayCommand]
+        public async Task ResetShift()
+        {
+            if (SelectedShift is not null)
+            {
+                await CarouselRepositoryService.DeleteShiftRecordToday(SelectedShift);
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    SingleActionDialog dialog = new()
+                    {
+                        Message = $"Sucessfully Resetting Today {SelectedShift} Shift",
+                        Background = Brush.Parse("#17367F"),
+                        ButtonText = "Ok"
+                    };
+                    await dialog.ShowAsync();
+                });
             }
         }
         public async Task LoadSettings()
@@ -146,6 +175,7 @@ namespace VolexCarousel.ViewModels
                 SingleActionDialog dialog = new()
                 {
                     Message = "Settings saved",
+                    Background = Brush.Parse("#17367F"),
                     ButtonText = "Ok"
                 };
                 await dialog.ShowAsync();
@@ -198,6 +228,7 @@ namespace VolexCarousel.ViewModels
                 SingleActionDialog dialog = new()
                 {
                     Message = "Settings saved",
+                    Background = Brush.Parse("#17367F"),
                     ButtonText = "Ok"
                 };
                 await dialog.ShowAsync();

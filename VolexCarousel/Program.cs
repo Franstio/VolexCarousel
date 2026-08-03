@@ -38,7 +38,9 @@ namespace VolexCarousel
             {
 
                 var setting = (sp.GetRequiredService<AppSettingService>()).LoadSettings();
-                return new SqliteConnection(setting.CarouselDb);
+                var con = new SqliteConnection(setting.CarouselDb);
+                con.Open();
+                return con;
             });
             var channelOption = new BoundedChannelOptions(1)
             {

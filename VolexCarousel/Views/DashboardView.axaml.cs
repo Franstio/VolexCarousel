@@ -18,6 +18,7 @@ public partial class DashboardView : UserControl
             viewModel.Initialization();
         }
     }
+
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         if (DataContext is DashboardViewModel viewModel)

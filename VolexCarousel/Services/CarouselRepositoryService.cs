@@ -11,7 +11,7 @@ using VolexCarousel.Models;
 
 namespace VolexCarousel.Services
 {
-    public class CarouselRepositoryService
+    public class CarouselRepositoryService : IDisposable
     {
         public readonly string db_scheme = @"CREATE TABLE IF NOT EXISTS ""tbl_shift"" (
 	""shiftname""	TEXT,
@@ -47,111 +47,94 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
         }
         public async Task Initialization()
         {
-            using (db)
+            IDbTransaction tr = null!;
+            try
             {
-                using (db)
+                await semaphore.WaitAsync();
+                
+                tr = db.BeginTransaction(IsolationLevel.Serializable);
+                await tr.Connection!.ExecuteAsync(db_scheme);
+                tr.Commit();
+                var usr = await GetUser();
+                if (!usr.Any())
                 {
-                    IDbTransaction tr = null!;
-                    try
-                    {
-                        await semaphore.WaitAsync();
-                        db.Open();
-                        tr = db.BeginTransaction(IsolationLevel.Serializable);
-                        await tr.Connection!.ExecuteAsync(db_scheme);
-                        tr.Commit();
-                        var usr = await GetUser();
-                        if (!usr.Any())
-                        {
-                            await db.ExecuteAsync("insert into tbl_users(username,password) values('admin','123')");
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogError(e.Message + " | " + e.StackTrace);
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
+                    await db.ExecuteAsync("insert into tbl_users(username,password) values('admin','123')");
                 }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
 
         public async Task<IEnumerable<User>> GetUser(string? username = null)
         {
-            using (db)
+            try
             {
-                try
-                {
-                    db.Open();
-                    return await db.QueryAsync<User>($"Select username,password from tbl_users where username=@username or @username is null", new { username });
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    return [];
-                }
+                
+                return await db.QueryAsync<User>($"Select username,password from tbl_users where username=@username or @username is null", new { username });
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                return [];
             }
         }
 
         public async Task RecordItemInput(ShiftTransactionRecord record)
         {
-            using (db)
+            IDbTransaction tr = null!;
+            try
             {
-                IDbTransaction tr = null!;
-                try
-                {
-                    await semaphore.WaitAsync();
-                    db.Open();
-                    tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput,targetdailyoutput,targetoutput) values(@shiftname,@datetimeinput,@datetimeoutput,@targetdailyoutput,@targetoutput);", record);
-                    tr.Commit();
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    tr.Rollback();
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
+                await semaphore.WaitAsync();
+                
+                tr = db.BeginTransaction(IsolationLevel.Serializable);
+                await tr.Connection!.ExecuteAsync("Insert into tbl_shiftrecord(shiftname,datetimeinput,datetimeoutput,targetdailyoutput,targetoutput) values(@shiftname,@datetimeinput,@datetimeoutput,@targetdailyoutput,@targetoutput);", record);
+                tr.Commit();
             }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                tr.Rollback();
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+
         }
 
         public async Task<IEnumerable<ShiftTransactionRecord>> GetRecordItems(int limit = 100)
         {
-            using (db)
+            try
             {
-                try
-                {
-                    db.Open();
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select shiftname,datetimeinput,datetimeoutput,targetdailyoutput,targetoutput from tbl_shiftrecord order by datetimeoutput desc limit @limit", limit);
-                    return query;
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    return [];
-                }
+                
+                var query = await db.QueryAsync<ShiftTransactionRecord>($"Select shiftname,datetimeinput,datetimeoutput,targetdailyoutput,targetoutput from tbl_shiftrecord order by datetimeoutput desc limit @limit", limit);
+                return query;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                return [];
             }
         }
         public async Task<IEnumerable<ShiftTransactionRecord>> GetTodayShiftRecord(string? shift = null, int limit = 10000)
         {
-            using (db)
+            try
             {
-                try
-                {
-                    db.Open();
-                    (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
-                    var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Datetime(r.datetimeoutput) between DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam) and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift,prevLimitParam,nextLimitParam, limit });
-                    return query;
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    return [];
-                }
+                
+                (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
+                var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Datetime(r.datetimeoutput) between DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam) and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift, prevLimitParam, nextLimitParam, limit });
+                return query;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                return [];
             }
         }
         public IEnumerable<ShiftRecordRowModel> GetTodayShiftDisplay(IEnumerable<ShiftTransactionRecord> shift)
@@ -228,143 +211,148 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
         }
         public async Task<IEnumerable<ShiftDailyOutputModel>> GetDailyOutput()
         {
-            using (db)
+            try
             {
-                try
+                
+                (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
+                var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATETIME(r.datetimeoutput) BETWEEN DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam)", new { prevLimitParam, nextLimitParam });
+                var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
                 {
-                    db.Open();
-                    (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
-                    var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATETIME(r.datetimeoutput) BETWEEN DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam)", new {prevLimitParam,nextLimitParam});
-                    var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
-                    {
-                        ShiftName = x.Key,
-                        TargetOutput = z.targetdailyoutput,
-                        TotalOutput = x.Count(x => x.datetimeoutput != default),
-                    })).DistinctBy(x=>x.ShiftName) ;
-                    return data!;
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    return [];
-                }
+                    ShiftName = x.Key,
+                    TargetOutput = z.targetdailyoutput,
+                    TotalOutput = x.Count(x => x.datetimeoutput != default),
+                })).DistinctBy(x => x.ShiftName);
+                return data!;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                return [];
+            }
+        }
+        public async Task DeleteShiftRecordToday(string shiftname)
+        {
+            try
+            {
+                var shifts = await GetShift(shiftname);
+                if (!shifts.Any())
+                    return;
+                var shift = shifts.First();
+                var prev = DateTime.Today.Add( shift.shiftend < shift.shiftstart ? shift.shiftend.Add(TimeSpan.FromDays(1)) : shift.shiftend);
+                var start = DateTime.Today.Add(shift.shiftstart);
+                await db.ExecuteAsync("Delete from tbl_shiftrecord where datetimeoutput between @start and @prev and shiftname=@shiftname", new { start = start.ToString("yyyy-MM-dd HH:mm:ss"), prev = prev.ToString("yyyy-MM-dd HH:mm:ss"), shiftname });
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
             }
         }
 
         public async Task UpdateTargetOutput(int targetOutput, string? shift = null)
         {
-            using (db)
+            IDbTransaction tr = null!;
+            try
             {
-                IDbTransaction tr = null!;
-                try
-                {
-                    await semaphore.WaitAsync();
-                    db.Open();
-                    tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput where shiftname=@shiftname or @shiftname is null", new { shiftname = shift, targetoutput = targetOutput });
-                    tr.Commit();
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    tr.Rollback();
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
+                await semaphore.WaitAsync();
+                
+                tr = db.BeginTransaction(IsolationLevel.Serializable);
+                await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput where shiftname=@shiftname or @shiftname is null", new { shiftname = shift, targetoutput = targetOutput });
+                tr.Commit();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                tr.Rollback();
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
         public async Task UpdateTargetDailyOutput(int targetDailyOutput, string? shift = null)
         {
-            using (db)
+            IDbTransaction tr = null!;
+            try
             {
-                IDbTransaction tr = null!;
-                try
-                {
-                    await semaphore.WaitAsync();
-                    db.Open();
-                    tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetdailyoutput=@targetDailyOutput where shiftname=@shiftname or @shiftname is null", new { shiftname = shift, targetDailyOutput });
-                    tr.Commit();
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    tr.Rollback();
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
+                await semaphore.WaitAsync();
+                
+                tr = db.BeginTransaction(IsolationLevel.Serializable);
+                await tr.Connection!.ExecuteAsync("Update tbl_shift set targetdailyoutput=@targetDailyOutput where shiftname=@shiftname or @shiftname is null", new { shiftname = shift, targetDailyOutput });
+                tr.Commit();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                tr.Rollback();
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
         public async Task<IEnumerable< ShiftMasterRecord>> GetShift(string? shift = null)
         {
-            using (db)
+            try
             {
-                try
-                {
-                    db.Open();
-                    var query = await db.QueryAsync<ShiftMasterRecord>("Select shiftname,targetdailyoutput,targetoutput,shiftstart,shiftend from tbl_shift where shiftname=@shift or @shift is null", new { shift });
-                    return query;
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    return [];
-                }
+                
+                var query = await db.QueryAsync<ShiftMasterRecord>("Select shiftname,targetdailyoutput,targetoutput,shiftstart,shiftend from tbl_shift where shiftname=@shift or @shift is null", new { shift });
+                return query;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                return [];
             }
         }
 
         public async Task AddShift(ShiftMasterRecord shift)
         {
-            using (db)
+            IDbTransaction tr = null!;
+            try
             {
-                IDbTransaction tr = null!;
-                try
-                {
-                    await semaphore.WaitAsync();
-                    db.Open();
-                    tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetdailyoutput,targetoutput,shiftstart,shiftend) values(@shiftname,@targetdailyoutput,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetdailyoutput=shift.targetdailyoutput, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString(@"hh\:mm\:ss"), shiftend = shift.shiftend.ToString(@"hh\:mm\:ss") });
-                    tr.Commit();
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    tr.Rollback();
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
+                await semaphore.WaitAsync();
+                
+                tr = db.BeginTransaction(IsolationLevel.Serializable);
+                await tr.Connection!.ExecuteAsync("Insert into tbl_shift(shiftname,targetdailyoutput,targetoutput,shiftstart,shiftend) values(@shiftname,@targetdailyoutput,@targetoutput,@shiftstart,@shiftend);", new { shiftname = shift.shiftname, targetdailyoutput = shift.targetdailyoutput, targetoutput = shift.targetoutput, shiftstart = shift.shiftstart.ToString(@"hh\:mm\:ss"), shiftend = shift.shiftend.ToString(@"hh\:mm\:ss") });
+                tr.Commit();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                tr.Rollback();
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
 
         public async Task UpdateShiftMaster(string shift, ShiftMasterRecord shiftData)
         {
-            using (db)
+            IDbTransaction tr = null!;
+            try
             {
-                IDbTransaction tr = null!;
-                try
-                {
-                    await semaphore.WaitAsync();
-                    db.Open();
-                    tr = db.BeginTransaction(IsolationLevel.Serializable);
-                    await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,targetdailyoutput=@targetdailyoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, targetdailyoutput=shiftData.targetdailyoutput, shiftstart = shiftData.shiftstart.ToString(@"hh\:mm\:ss"), shiftend =shiftData.shiftend.ToString(@"hh\:mm\:ss") });
-                    tr.Commit();
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message + " | " + e.StackTrace);
-                    tr.Rollback();
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
+                await semaphore.WaitAsync();
+                
+                tr = db.BeginTransaction(IsolationLevel.Serializable);
+                await tr.Connection!.ExecuteAsync("Update tbl_shift set targetoutput=@targetoutput,targetdailyoutput=@targetdailyoutput,shiftstart=@shiftstart,shiftend=@shiftend where shiftname=@shiftname", new { shiftname = shift, targetoutput = shiftData.targetoutput, targetdailyoutput = shiftData.targetdailyoutput, shiftstart = shiftData.shiftstart.ToString(@"hh\:mm\:ss"), shiftend = shiftData.shiftend.ToString(@"hh\:mm\:ss") });
+                tr.Commit();
             }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message + " | " + e.StackTrace);
+                tr.Rollback();
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        public void Dispose()
+        {
+            db.Close();
+            db.Dispose();
         }
     }
 }

@@ -139,6 +139,12 @@
                            <controls:LogTemplateControl Grid.Row="1" Logs="{Binding Logs}" />
                            </Grid>
                        </TabItem>
+                       <TabItem Header="Reset" Foreground="White">
+                           <StackPanel Orientation="Vertical" Spacing="5">
+                               <ComboBox ItemsSource="{Binding ResetShifts}" SelectedItem="{Binding SelectedShift}"/>
+                               <Button Foreground="White" Command="{Binding ResetShiftCommand}">Reset</Button>
+                           </StackPanel>
+                       </TabItem>
   </TabControl>
 
                  </Border>
