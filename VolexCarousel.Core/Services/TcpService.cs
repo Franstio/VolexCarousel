@@ -18,6 +18,7 @@ namespace VolexCarousel.Core.Services
         private  TcpClient _tcpClient;
         private NetworkStream? _networkStream = null;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim semaphoreRead = new SemaphoreSlim(1, 1);
         public bool IsConnected => _tcpClient.Connected;
         private IPEndPoint? _endpoint = null;
         public event Action<string>? OnResponse;
@@ -82,7 +83,7 @@ namespace VolexCarousel.Core.Services
             try
             {
                 DateTime dt = DateTime.Now;
-                await semaphore.WaitAsync();
+                await semaphoreRead.WaitAsync();
                 source.Token.ThrowIfCancellationRequested();
                 source.CancelAfter(TimeSpan.FromSeconds(5));
                 Reconnect();
@@ -93,7 +94,6 @@ namespace VolexCarousel.Core.Services
                 }
                 byte[] buffer = new byte[1024];
                 var data = await _networkStream.ReadAsync(buffer, 0, buffer.Length,source.Token);
-                semaphore.Release();
                 var res = Encoding.ASCII.GetString(buffer, 0, data).Trim();
                 return res;
             }
@@ -101,11 +101,15 @@ namespace VolexCarousel.Core.Services
             {
                 this.Stop();
                 Reconnect();
-                semaphore.Release();
                 OnResponse?.Invoke("Error Reading: "+e.Message );
 
                 _logger.LogError(e.Message + " | " + e.StackTrace);
                 throw;
+            }
+            finally
+            {
+                semaphoreRead.Release();
+
             }
         }
 
@@ -123,27 +127,29 @@ namespace VolexCarousel.Core.Services
                 }
                 byte[] buffer = Encoding.ASCII.GetBytes(message);
                 await _networkStream.WriteAsync(buffer, 0, buffer.Length);
-                semaphore.Release();
+
+                var res = await ReadData();
+                if (string.IsNullOrEmpty(res))
+                {
+                    Stop();
+                    Reconnect();
+                    throw new NoNullAllowedException("PLC Return is null or empty");
+                }
                 OnResponse?.Invoke("Sucess write: " + message);
+                OnResponse?.Invoke($"Result {message} : {res}");
+                return res;
             }
             catch (Exception e)
             {
-                semaphore.Release();
                 OnResponse?.Invoke("Error Write: "+e.Message);
 
                 _logger.LogError(e.Message + " | " + e.StackTrace);
                 throw;
             }
-            var res = await ReadData();
-            OnResponse?.Invoke($"Result {message} : {res}");
-            if (string.IsNullOrEmpty(res))
+            finally
             {
-                Stop();
-                Reconnect();
-                throw new NoNullAllowedException("PLC Return is null or empty");
+                semaphore.Release();
             }
-            
-            return res;
         }
     }
 }

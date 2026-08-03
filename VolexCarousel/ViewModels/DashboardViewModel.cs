@@ -109,7 +109,7 @@ namespace VolexCarousel.ViewModels
                 TotalOutput = (await _carouselRepositoryService.GetTodayShiftRecord()).Count().ToString();
             });
         }
-        private async Task SetDataShifts(ShiftTransactionRecord record)
+        public async Task SetDataShifts()
         {
             var rows = await _carouselRepositoryService.GetShift();
             ShiftTransactionRecords.Clear();
@@ -192,7 +192,7 @@ namespace VolexCarousel.ViewModels
                     }
 
                 });
-                await SetDataShifts(record);
+                await SetDataShifts();
             }
         }
 
