@@ -205,17 +205,17 @@
               ColumnSpacing="20">
 
             <controls:ShiftItemTable Grid.Column="0"
-                                 Title="Day"
+                                 Title="Shift 1"
                                  ShiftItems="{Binding PagiShiftRows}"
                                 />
 
             <controls:ShiftItemTable Grid.Column="1"
-                                 Title="Noon"
+                                 Title="Shift 2"
                                  ShiftItems="{Binding SiangShiftRows}"
                                 />
                                 
             <controls:ShiftItemTable Grid.Column="2"
-                                 Title="Night"
+                                 Title="Shift 3"
                                  ShiftItems="{Binding MalamShiftRows}"
                                 />
 

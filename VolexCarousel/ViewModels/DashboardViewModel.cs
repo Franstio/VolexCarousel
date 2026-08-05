@@ -100,11 +100,11 @@ namespace VolexCarousel.ViewModels
                 ShiftRows = new ObservableCollection<ShiftDailyOutputModel>(await _carouselRepositoryService.GetDailyOutput());
                 ShiftTransactionRecords.AddRange(await _carouselRepositoryService.GetTodayShiftRecord());
                 PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(
-                 await _carouselRepositoryService.GetTodayShiftDisplay("Day",await _carouselRepositoryService.GetTodayShiftRecord("Day")));
+                 await _carouselRepositoryService.GetTodayShiftDisplay("Shift 1",await _carouselRepositoryService.GetTodayShiftRecord("Shift 1")));
                 SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(
-                 await _carouselRepositoryService.GetTodayShiftDisplay("Noon",await _carouselRepositoryService.GetTodayShiftRecord("Noon")));
+                 await _carouselRepositoryService.GetTodayShiftDisplay("Shift 2", await _carouselRepositoryService.GetTodayShiftRecord("Shift 2")));
                 MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(
-                 await _carouselRepositoryService.GetTodayShiftDisplay("Night",await _carouselRepositoryService.GetTodayShiftRecord("Night")));
+                 await _carouselRepositoryService.GetTodayShiftDisplay("Shift 3", await _carouselRepositoryService.GetTodayShiftRecord("Shift 3")));
 
                 TotalOutput = (await _carouselRepositoryService.GetTodayShiftRecord()).Count().ToString();
             });
@@ -129,9 +129,9 @@ namespace VolexCarousel.ViewModels
                         shiftname = x.x.shiftname
                     });
 
-            PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Day", records));
-            SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Noon", records));
-            MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Night", records));
+            PagiShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Shift 1", records));
+            SiangShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Shift 2", records));
+            MalamShiftRows = new ObservableCollection<ShiftRecordRowModel>(await _carouselRepositoryService.GetTodayShiftDisplay("Shift 3", records));
 
             Dispatcher.UIThread.Invoke(() =>
             {

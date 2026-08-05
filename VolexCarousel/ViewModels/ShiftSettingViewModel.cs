@@ -51,13 +51,13 @@ namespace VolexCarousel.ViewModels
         public string logState = "Resume";
 
         [ObservableProperty]
-        public string? selectedShift = "Day";
+        public string? selectedShift = "Shift 1";
 
         [ObservableProperty]
         public ObservableCollection<string> resetShifts = new ObservableCollection<string>([
-            "Day",
-            "Noon",
-            "Night"
+            "Shift 1",
+            "Shift 2",
+            "Shift 3"
             ]);
 
         private readonly TCPPLCService tcpPLCService;
@@ -137,15 +137,15 @@ namespace VolexCarousel.ViewModels
             {
                 switch (shift.shiftname)
                 {
-                    case "Day":
+                    case "Shift 1":
                         DayShiftTimeStart = shift.shiftstart;
                         DayShiftTimeEnd = shift.shiftend;
                         break;
-                    case "Noon":
+                    case "Shift 2":
                         NoonShiftTimeStart = shift.shiftstart;
                         NoonShiftTimeEnd = shift.shiftend;
                         break;
-                    case "Night":
+                    case "Shift 3":
                         NightShiftTimeStart = shift.shiftstart;
                         NightShiftTimeEnd = shift.shiftend;
                         break;
@@ -198,7 +198,7 @@ namespace VolexCarousel.ViewModels
         [RelayCommand]
         public async Task SetAllShift()
         {
-            string[] shifts = ["Day", "Noon", "Night"];   
+            string[] shifts = ["Shift 1", "Shift 2", "Shift 3"];   
             for (int i = 0; i < shifts.Length; i++)
             {
                 var shiftName = shifts[i];
@@ -206,15 +206,15 @@ namespace VolexCarousel.ViewModels
                 TimeSpan shiftEnd;
                 switch (shiftName)
                 {
-                    case "Day":
+                    case "Shift 1":
                         shiftStart = DayShiftTimeStart!.Value;
                         shiftEnd = DayShiftTimeEnd!.Value;
                         break;
-                    case "Noon":
+                    case "Shift 2":
                         shiftStart = NoonShiftTimeStart!.Value;
                         shiftEnd = NoonShiftTimeEnd!.Value;
                         break;
-                    case "Night":
+                    case "Shift 3":
                         shiftStart = NightShiftTimeStart!.Value;
                         shiftEnd = NightShiftTimeEnd!.Value;
                         break;

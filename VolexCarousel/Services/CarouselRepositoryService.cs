@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             try
             {
                 
-                (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
+                (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Shift 1")).First());
                 var query = await db.QueryAsync<ShiftTransactionRecord>($"Select r.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shiftrecord r inner join tbl_shift s on r.shiftname=s.shiftname where Datetime(r.datetimeoutput) between DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam) and (r.shiftname=@shift or @shift is null) order by datetimeinput limit @limit", new { shift, prevLimitParam, nextLimitParam, limit });
                 return query;
             }
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS ""tbl_users"" (
             try
             {
                 
-                (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Day")).First());
+                (string prevLimitParam, string nextLimitParam) = GetDayLimit((await GetShift("Shift 1")).First());
                 var query = await db.QueryAsync<ShiftTransactionRecord>("Select s.shiftname,datetimeinput,datetimeoutput,s.targetdailyoutput,s.targetoutput from tbl_shift s left join tbl_shiftrecord r  on s.shiftname=r.shiftname and DATETIME(r.datetimeoutput) BETWEEN DATETIME(@prevLimitParam) and DATETIME(@nextLimitParam)", new { prevLimitParam, nextLimitParam });
                 var data = query.GroupBy(x => x.shiftname).SelectMany(x => x.Select(z => new ShiftDailyOutputModel()
                 {
